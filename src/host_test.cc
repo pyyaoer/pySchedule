@@ -3,7 +3,8 @@
 
 int main(void) {
   int host_id = 1;
-  Host h(host_id);
+  boost::asio::io_service io_service;
+  Host h(host_id, io_service);
   boost::thread t(boost::bind(&Host::Run, &h));
   t.join();
 }
