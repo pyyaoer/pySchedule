@@ -12,13 +12,13 @@ Host::Host(int host_id, boost::asio::io_service& service)
 } 
 
 
-void Host::SendMessage(Message& msg) {
+void Host::SendMessage(std::shared_ptr<Message> msg) {
   boost::asio::ip::tcp::resolver resolver(io_service_);
   boost::asio::ip::tcp::socket socket(io_service_);
   boost::asio::ip::tcp::resolver::iterator endpoint = 
-    resolver.resolve(boost::asio::ip::tcp::resolver::query(HOST, msg.GetPort()));
+    resolver.resolve(boost::asio::ip::tcp::resolver::query(HOST, msg->GetPort()));
   boost::asio::connect(socket, endpoint);
-  socket.send(boost::asio::buffer(msg.ToString()));
+  socket.send(boost::asio::buffer(msg->ToString()));
 }
 
 void Host::RecvMessage(shared_socket_t socket,
@@ -68,6 +68,23 @@ void Host::Run() {
       if (msg != nullptr) {
         //DO SOMETHING WITH msg!
         std::cout << msg->ToString() << std::endl;
+      }
+    }
+  });
+
+  thread_pool_.emplace_back( [=]{
+    std::shared_ptr<Message> msg;
+    while(true) {
+      msg = nullptr;
+      {
+        std::lock_guard<std::mutex> guard(out_mutex_);
+        if (not out_msg_.empty()) {
+          msg = out_msg_.front();
+          out_msg_.pop();
+        }
+      }
+      if (msg != nullptr) {
+        SendMessage(msg);
       }
     }
   });

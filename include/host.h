@@ -22,7 +22,7 @@ class Host : public std::enable_shared_from_this<Host> {
   void Run();
 
  private:
-  void SendMessage(Message& msg);
+  void SendMessage(std::shared_ptr<Message> msg);
   void RecvMessage(shared_socket_t socket,
     boost::system::error_code const& error);
 
