@@ -1,10 +1,10 @@
 include_HEADERS = include/lib_includes.h \
-                   include/host.h \
+                   include/node.h \
                    include/macros.h \
                    include/message.h
 
-bin_PROGRAMS = bin/host_test
+bin_PROGRAMS = bin/node_test
 
-bin_host_test_SOURCES = src/host.cc \
-                         src/host_test.cc
+bin_node_test_SOURCES = src/node.cc \
+                         src/node_test.cc
 

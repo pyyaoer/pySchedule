@@ -1,5 +1,5 @@
-#ifndef PYSCHEDULE_HOST_H_
-#define PYSCHEDULE_HOST_H_
+#ifndef PYSCHEDULE_NODE_H_
+#define PYSCHEDULE_NODE_H_
 
 #include <stdio.h>
 
@@ -11,22 +11,24 @@
   TypeName(const TypeName&); \
   void operator=(const TypeName&)
 
-class Host : public std::enable_shared_from_this<Host> {
+class Node : public std::enable_shared_from_this<Node> {
 
   using shared_socket_t = std::shared_ptr<boost::asio::ip::tcp::socket>;
 
  public:
-  explicit Host(int host_id, boost::asio::io_service& service);
-  ~Host() {};
+  explicit Node(int node_id, boost::asio::io_service& service);
+  ~Node() {};
 
   void Run();
 
  private:
+
+  bool IsValidID(int node_id);
   void SendMessage(std::shared_ptr<Message> msg);
   void RecvMessage(shared_socket_t socket,
     boost::system::error_code const& error);
 
-  int host_id_;
+  int node_id_;
   short port_;
 
   boost::asio::io_service& io_service_;
@@ -38,8 +40,8 @@ class Host : public std::enable_shared_from_this<Host> {
   std::queue<std::shared_ptr<Message> > in_msg_;
   std::queue<std::shared_ptr<Message> > out_msg_;
 
-  DISALLOW_COPY_AND_ASSIGN(Host);
+  DISALLOW_COPY_AND_ASSIGN(Node);
 };
 
 
-#endif // PYSCHEDULE_HOST_H_
+#endif // PYSCHEDULE_NODE_H_

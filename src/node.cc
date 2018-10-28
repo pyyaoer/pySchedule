@@ -1,18 +1,21 @@
-#include "include/host.h"
+#include "include/node.h"
 
-Host::Host(int host_id, boost::asio::io_service& service) 
+Node::Node(int node_id, boost::asio::io_service& service) 
   : io_service_(service), acceptor_(service) {
-  if (host_id >= HOST_NUM || host_id < 0) {
-    host_id_ = -1;
-    printf("Error! Host id %d is invalid", host_id);
+  if (IsValidID(node_id)) {
+    node_id_ = -1;
+    printf("Error! Node id %d is invalid", node_id);
     return;
   }
-  host_id_ = host_id_;
-  port_ = HOST_SEND_BASE + host_id;
+  node_id_ = node_id_;
+  port_ = PORT_BASE + node_id;
 } 
 
+bool Node::IsValidID(int node_id) {
+  return true;
+}
 
-void Host::SendMessage(std::shared_ptr<Message> msg) {
+void Node::SendMessage(std::shared_ptr<Message> msg) {
   boost::asio::ip::tcp::resolver resolver(io_service_);
   boost::asio::ip::tcp::socket socket(io_service_);
   boost::asio::ip::tcp::resolver::iterator endpoint = 
@@ -21,7 +24,7 @@ void Host::SendMessage(std::shared_ptr<Message> msg) {
   socket.send(boost::asio::buffer(msg->ToString()));
 }
 
-void Host::RecvMessage(shared_socket_t socket,
+void Node::RecvMessage(shared_socket_t socket,
   boost::system::error_code const& error) {
 
   if (error) return;
@@ -41,7 +44,7 @@ void Host::RecvMessage(shared_socket_t socket,
   acceptor_.async_accept(*new_socket, [=](boost::system::error_code e) { RecvMessage(new_socket, e); });
 }
 
-void Host::Run() {
+void Node::Run() {
   auto socket = std::make_shared<boost::asio::ip::tcp::socket>(io_service_);
   boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port_);
   acceptor_.open(endpoint.protocol());
@@ -50,7 +53,7 @@ void Host::Run() {
   acceptor_.listen();
   acceptor_.async_accept(*socket, [=](boost::system::error_code e) { RecvMessage(socket, e); });
 
-  for (int i = 0; i < USER_NUM / HOST_NUM; ++i) {
+  for (int i = 0; i < THREAD_NUM; ++i) {
     thread_pool_.emplace_back( [=]{ io_service_.run(); } );
   }
 
