@@ -16,5 +16,6 @@
 #define HOST "127.0.0.1"
 
 #define MESSAGE_SIZE_MAX 1024
+
 #endif //PYSCHEDULE_MACROS_H_
 

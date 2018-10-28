@@ -2,12 +2,9 @@
 #define PYSCHEDULE_HOST_H_
 
 #include <stdio.h>
-#include <iostream>
-#include <thread>
-#include <memory>
 
 #include "include/macros.h"
-#include "include/boost_includes.h"
+#include "include/lib_includes.h"
 #include "include/message.h"
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
@@ -32,9 +29,14 @@ class Host : public std::enable_shared_from_this<Host> {
   int host_id_;
   short port_;
 
-  std::vector<std::thread> thread_pool_;
   boost::asio::io_service& io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
+
+  std::vector<std::thread> thread_pool_;
+  std::mutex in_mutex_;
+  std::mutex out_mutex_;
+  std::queue<std::shared_ptr<Message> > in_msg_;
+  std::queue<std::shared_ptr<Message> > out_msg_;
 
   DISALLOW_COPY_AND_ASSIGN(Host);
 };

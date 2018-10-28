@@ -1,6 +1,7 @@
-include_HEADERS = include/boost_includes.h \
+include_HEADERS = include/lib_includes.h \
                    include/host.h \
-                   include/macros.h
+                   include/macros.h \
+                   include/message.h
 
 bin_PROGRAMS = bin/host_test
 

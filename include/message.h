@@ -11,9 +11,12 @@ class Message {
   Message() {};
   ~Message() {};
 
+  std::string GetPort() { return std::to_string(port_); }
   std::string ToString() {return std::string("Hello");}
 
  private:
+
+  short port_;
 
   DISALLOW_COPY_AND_ASSIGN(Message);
 };
