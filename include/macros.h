@@ -9,7 +9,7 @@
 
 #define HOST "127.0.0.1"
 
-#define MESSAGE_SIZE_MAX 1024
+#define MESSAGE_SIZE_MAX 128
 
 #define THREAD_NUM 4
 

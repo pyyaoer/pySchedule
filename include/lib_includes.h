@@ -9,5 +9,6 @@
 #include <memory>
 #include <queue>
 #include <mutex>
+#include <sstream>
 
 #endif //PYSCHEDULE_LIB_INCLUDES_
