@@ -14,13 +14,21 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
     resolver.resolve(boost::asio::ip::tcp::resolver::query(HOST, std::to_string(msg->GetDstPort())));
   boost::asio::connect(socket, endpoint);
   socket.send(boost::asio::buffer(msg->ToString()));
+  std::cout << "Sent!" << std::endl;
 }
 
 void Node::ReadMessage(const boost::system::error_code& error) {
-  if (!error) {
-    auto msg = std::make_shared<Message>(socket_buffer);
-    AtomicPushInMessage(msg);
+  // TODO: Do not ignore the error here (but I observe that the error is always "Operation canceled" error which may be ignored)
+  if (error) {
+    const char* name[2] = {"Server", "Client"};
+    std::cout << name[2-node_id_] << ": " << error.message() << std::endl;
   }
+  auto msg = std::make_shared<Message>(socket_buffer);
+  AtomicPushInMessage(msg);
+  for (int i = 0; i < MESSAGE_SIZE_MAX; ++i) {
+    std::cout << (int)socket_buffer[i];
+  }
+  std::cout << std::endl;
 }
 
 void Node::AtomicPushInMessage(std::shared_ptr<Message> msg) {
@@ -80,9 +88,9 @@ void Node::Run() {
 
   // Threads for handling messages in the in_msg_ queue
   thread_pool_.emplace_back( [=]{
-    //boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
     std::shared_ptr<Message> msg = nullptr;
     while(true) {
+      boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
       if ((msg = AtomicPopInMessage()) != nullptr) {
         HandleMessage(msg);
       }
@@ -91,9 +99,9 @@ void Node::Run() {
 
   // Threads for sending messages in the out_msg_ queue
   thread_pool_.emplace_back( [=]{
-    //boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
     std::shared_ptr<Message> msg = nullptr;
     while(true) {
+      boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
       if ((msg = AtomicPopOutMessage()) != nullptr) {
         SendMessage(msg);
       }
