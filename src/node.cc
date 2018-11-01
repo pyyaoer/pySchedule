@@ -11,7 +11,7 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
   boost::asio::ip::tcp::resolver resolver(io_service_);
   boost::asio::ip::tcp::socket socket(io_service_);
   boost::asio::ip::tcp::resolver::iterator endpoint = 
-    resolver.resolve(boost::asio::ip::tcp::resolver::query(HOST, std::to_string(msg->GetDstPort())));
+    resolver.resolve(boost::asio::ip::tcp::resolver::query(LOCALHOST, std::to_string(msg->GetDstPort())));
   boost::asio::connect(socket, endpoint);
   socket.send(boost::asio::buffer(msg->ToString()));
   std::cout << "Sent!" << std::endl;
@@ -31,34 +31,35 @@ void Node::ReadMessage(const boost::system::error_code& error) {
   std::cout << std::endl;
 }
 
+void AtomicPushMessage(std::shared_ptr<Message> msg, std::mutex &mutex, std::queue<std::shared_ptr<Message> > &queue) {
+  std::lock_guard<std::mutex> guard(mutex);
+  queue.push(msg);
+}
+
+std::shared_ptr<Message> AtomicPopMessage(std::mutex &mutex, std::queue<std::shared_ptr<Message> > &queue) {
+  std::shared_ptr<Message> msg = nullptr;
+  std::lock_guard<std::mutex> guard(mutex);
+  if (not queue.empty()) {
+    msg = queue.front();
+    queue.pop();
+  }
+  return msg;
+}
+
 void Node::AtomicPushInMessage(std::shared_ptr<Message> msg) {
-  std::lock_guard<std::mutex> guard(in_mutex_);
-  in_msg_.push(msg);
+  AtomicPushMessage(msg, in_mutex_, in_msg_);
 }
 
 std::shared_ptr<Message> Node::AtomicPopInMessage() {
-  std::shared_ptr<Message> msg = nullptr;
-  std::lock_guard<std::mutex> guard(in_mutex_);
-  if (not in_msg_.empty()) {
-    msg = in_msg_.front();
-    in_msg_.pop();
-  }
-  return msg;
+  return AtomicPopMessage(in_mutex_, in_msg_);
 }
 
 void Node::AtomicPushOutMessage(std::shared_ptr<Message> msg) {
-  std::lock_guard<std::mutex> guard(out_mutex_);
-  out_msg_.push(msg);
+  AtomicPushMessage(msg, out_mutex_, out_msg_);
 }
 
 std::shared_ptr<Message> Node::AtomicPopOutMessage() {
-  std::shared_ptr<Message> msg = nullptr;
-  std::lock_guard<std::mutex> guard(out_mutex_);
-  if (not out_msg_.empty()) {
-    msg = out_msg_.front();
-    out_msg_.pop();
-  }
-  return msg;
+  return AtomicPopMessage(out_mutex_, out_msg_);
 }
 
 void Node::RecvMessage(shared_socket_t socket,
