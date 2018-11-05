@@ -3,8 +3,10 @@
 #define TESTNODE_CLIENT_ID 1
 #define TESTNODE_SERVER_ID 2
 
+enum eMessageType{ BASIC = 0 };
+
 class Client : public Node {
- public:
+public:
   int cnt;
   explicit Client(int node_id, boost::asio::io_service& service)
     : Node(node_id, service) {
