@@ -14,7 +14,7 @@ class Message {
     : src_port_(src_port), dst_port_(dst_port), type_(type) {
       create_time_ = time(0);
     }
-  ~Message() {};
+  virtual ~Message() = default;
 
   short GetSrcPort() { return src_port_; }
   short GetDstPort() { return dst_port_; }
@@ -26,7 +26,7 @@ class Message {
     return ret.str();
   }
 
- private:
+ protected:
   short src_port_;
   short dst_port_;
   long long create_time_;

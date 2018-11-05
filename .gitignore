@@ -29,6 +29,9 @@ autom4te.cache
 */.deps
 */.dirstamp
 
+*/*/.deps
+*/*/.dirstamp
+
 # https://www.gnu.org/software/libtool/
 
 /ltmain.sh

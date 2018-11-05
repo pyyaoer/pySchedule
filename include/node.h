@@ -30,6 +30,7 @@ class Node : public std::enable_shared_from_this<Node> {
 
   int node_id_;
   short port_;
+  std::vector<std::thread> thread_pool_;
 
  private:
 
@@ -45,7 +46,6 @@ class Node : public std::enable_shared_from_this<Node> {
   boost::asio::io_service& io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
 
-  std::vector<std::thread> thread_pool_;
   std::mutex in_mutex_;
   std::mutex out_mutex_;
   std::queue<std::shared_ptr<Message> > in_msg_;
