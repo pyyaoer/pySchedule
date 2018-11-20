@@ -13,17 +13,29 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
   boost::asio::ip::tcp::resolver::iterator endpoint = 
     resolver.resolve(boost::asio::ip::tcp::resolver::query(LOCALHOST, std::to_string(msg->GetDstPort())));
   boost::asio::connect(socket, endpoint);
-  socket.send(boost::asio::buffer(msg->ToString()));
+
+  {
+    std::ostringstream archive_stream;
+    boost::archive::text_oarchive archive(archive_stream);
+    archive << msg;
+    socket.send(boost::asio::buffer(archive_stream.str()));
+  }
   std::cout << "Sent!" << std::endl;
 }
 
 void Node::ReadMessage(const boost::system::error_code& error) {
   // TODO: Do not ignore the error here (but I observe that the error is always "Operation canceled" error which may be ignored)
   if (error) {
-    const char* name[2] = {"Server", "Client"};
-    std::cout << name[2-node_id_] << ": " << error.message() << std::endl;
+    //std::cout << "Something strange happened : " << error.message() << std::endl;
   }
-  auto msg = std::make_shared<Message>(socket_buffer);
+  std::shared_ptr<Message> msg = nullptr;
+  {
+    std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
+    std::istringstream archive_stream(archive_data);
+    boost::archive::text_iarchive archive(archive_stream);
+    archive >> msg;
+  }
+
   AtomicPushInMessage(msg);
   for (int i = 0; i < MESSAGE_SIZE_MAX; ++i) {
     std::cout << (int)socket_buffer[i];

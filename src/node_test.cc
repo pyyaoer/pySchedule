@@ -18,7 +18,11 @@ public:
   }
  private:
   void HandleMessage(std::shared_ptr<Message> msg) {
-    std::cout << "Client: " << msg->ToString() << " " << cnt++ << std::endl;
+    std::ostringstream archive_stream;
+    boost::archive::text_oarchive archive(archive_stream);
+    archive << msg;
+    std::cout << "Client: " << archive_stream.str() << " " << cnt++ << std::endl;
+    //std::cout << "Client: " << msg->ToString() << " " << cnt++ << std::endl;
     auto new_msg = std::make_shared<Message>(port_, msg->GetSrcPort(), BASIC);
     AtomicPushOutMessage(new_msg);
   }
@@ -33,7 +37,11 @@ class Server : public Node {
   }
  private:
   void HandleMessage(std::shared_ptr<Message> msg) {
-    std::cout << "Server: " << msg->ToString() << " " << cnt++ << std::endl;
+    std::ostringstream archive_stream;
+    boost::archive::text_oarchive archive(archive_stream);
+    archive << msg;
+    std::cout << "Server: " << archive_stream.str() << " " << cnt++ << std::endl;
+    //std::cout << "Server: " << msg->ToString() << " " << cnt++ << std::endl;
     auto new_msg = std::make_shared<Message>(port_, msg->GetSrcPort(), BASIC);
     AtomicPushOutMessage(new_msg);
   }

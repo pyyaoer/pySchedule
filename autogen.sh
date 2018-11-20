@@ -12,6 +12,7 @@ fi
 
 rm -rf autom4te.cache
 
+libtoolize
 aclocal
 autoheader
 automake --force-missing --add-missing

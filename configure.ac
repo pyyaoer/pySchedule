@@ -15,12 +15,20 @@ AC_PROG_CC
 AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
 
 # Checks for libraries.
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([boost/thread.hpp], [],
-    [AC_MSG_ERROR(You need the Boost libraries.)])
-AC_LANG_POP([C++])
+#AC_LANG_PUSH([C++])
+#AC_CHECK_HEADERS([boost/thread.hpp], [],
+#    [AC_MSG_ERROR(You need the Boost libraries.)])
+#AC_LANG_POP([C++])
+#
+AC_PROG_LIBTOOL
+AC_CONFIG_MACRO_DIR(m4)
+BOOST_REQUIRE([1.59])
+BOOST_SYSTEM
+BOOST_THREAD
+BOOST_SERIALIZATION
 
-LIBS="-lboost_system -lboost_thread -lpthread"
+LIBS="-lboost_system -lboost_thread -lpthread -lboost_serialization"
+#LIBS="-lpthread"
 
 # Checks for header files.
 
