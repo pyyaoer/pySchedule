@@ -1,4 +1,6 @@
 #include "include/node.h"
+#include <cstdlib>
+#include <ctime>
 
 #define TESTNODE_CLIENT_ID 1
 #define TESTNODE_SERVER_ID 2
@@ -18,12 +20,16 @@ public:
   }
  private:
   void HandleMessage(std::shared_ptr<Message> msg) {
+    std::cout << "Round " << cnt++ << " Client" << std::endl;
     std::ostringstream archive_stream;
     boost::archive::text_oarchive archive(archive_stream);
     archive << msg;
-    std::cout << "Round " << cnt++ << " Client" << std::endl;
+    std::cout << "Receive message" << std::endl;
     msg->PrintMessage();
     auto new_msg = std::make_shared<Message>(port_, msg->GetSrcPort(), BASIC);
+    new_msg->PushData("Client", std::rand() % 7);
+    std::cout << "Send message" << std::endl;
+    new_msg->PrintMessage();
     AtomicPushOutMessage(new_msg);
   }
 };
@@ -37,17 +43,22 @@ class Server : public Node {
   }
  private:
   void HandleMessage(std::shared_ptr<Message> msg) {
+    std::cout << "Round " << cnt++ << " Server" << std::endl;
     std::ostringstream archive_stream;
     boost::archive::text_oarchive archive(archive_stream);
     archive << msg;
-    std::cout << "Round " << cnt++ << " Server" << std::endl;
+    std::cout << "Receive message" << std::endl;
     msg->PrintMessage();
     auto new_msg = std::make_shared<Message>(port_, msg->GetSrcPort(), BASIC);
+    new_msg->PushData("Server", std::rand() % 7);
+    std::cout << "Send message" << std::endl;
+    new_msg->PrintMessage();
     AtomicPushOutMessage(new_msg);
   }
 };
 
 int main(void) {
+  std::srand(std::time(nullptr));
   boost::asio::io_service io_client;
   boost::asio::io_service io_server;
   auto client = std::make_shared<Client>(TESTNODE_CLIENT_ID, io_client);
