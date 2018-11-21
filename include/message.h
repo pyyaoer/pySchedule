@@ -29,11 +29,12 @@ class Message {
   short GetType() { return type_; }
 
   // Debug only
-  std::string ToString() { 
-    std::stringstream ret;
-    ret << src_port_ << " " << dst_port_ << " " << type_ 
-        << " " << create_time_ << "\0";
-    return ret.str();
+  void PrintMessage() { 
+    std::cout << "\tsrc_port_: " << src_port_ << std::endl
+              << "\tdst_port_: " << dst_port_ << std::endl
+              << "\ttype_: " << type_ << std::endl
+              << "\tcreate_time_: " << create_time_ << std::endl
+              << "\tdata.size(): " << data.size() << std::endl;
   }
 
  protected:
