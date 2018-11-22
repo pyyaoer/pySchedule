@@ -18,8 +18,8 @@ class Message {
 
  public:
   Message() {}
-  explicit Message(short src_port, short dst_port, short type)
-    : src_port_(src_port), dst_port_(dst_port), type_(type) {
+  explicit Message(short src_port, short dst_port, short type, int data_size)
+    : src_port_(src_port), dst_port_(dst_port), type_(type), data_(data_size, '\0') {
       create_time_ = time(0);
     }
   virtual ~Message() = default;
@@ -27,10 +27,16 @@ class Message {
   short GetSrcPort() { return src_port_; }
   short GetDstPort() { return dst_port_; }
   short GetType() { return type_; }
-  void PushData(const char *data, int length) {
-    for (int i = 0; i < length; ++i) {
-      data_.push_back(data[i]);
-    }
+
+  template <class T>
+  void SetData(T data) {
+    assert(sizeof(T) == data_.size());
+    auto const ptr = reinterpret_cast<unsigned char*>(&data);
+    data_.assign(ptr, ptr + sizeof(T));
+  }
+  template <class T>
+  void GetData(T &data) {
+    std::memcpy(data, data_.data(), sizeof(T));
   }
 
   // Debug only
