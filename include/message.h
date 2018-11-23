@@ -1,7 +1,7 @@
 #ifndef PYSCHEDULE_MESSAGE_H_
 #define PYSCHEDULE_MESSAGE_H_
 
-#include "include/lib_includes.h"
+#include "include/lib_include.h"
 
 class Message {
   friend class boost::serialization::access;

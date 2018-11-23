@@ -3,15 +3,13 @@
 
 #include "include/node.h"
 #include "messages.h"
-
-#define TESTNODE_CLIENT_ID 1
-#define TESTNODE_SERVER_ID 2
+#include "macros.h"
 
 class Client : public Node {
  public:
   explicit Client(int node_id, boost::asio::io_service& service)
     : Node(node_id, service), cnt(0) {
-    std::shared_ptr<Message> init_msg = std::make_shared<BasicMessage>(port_, TESTNODE_SERVER_ID + PORT_BASE);
+    std::shared_ptr<Message> init_msg = std::make_shared<BasicMessage>(port_, SERVER_PORT);
     AtomicPushOutMessage(init_msg);
   }
 

@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-#include "include/macros.h"
-#include "include/lib_includes.h"
+#include "include/macro.h"
+#include "include/lib_include.h"
 #include "include/message.h"
 
 class Node : public std::enable_shared_from_this<Node> {

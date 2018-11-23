@@ -1,5 +1,5 @@
-#ifndef PYSCHEDULE_LIB_INCLUDES_
-#define PYSCHEDULE_LIB_INCLUDES_
+#ifndef PYSCHEDULE_LIB_INCLUDE_
+#define PYSCHEDULE_LIB_INCLUDE_
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
@@ -21,4 +21,4 @@
   TypeName(const TypeName&); \
   void operator=(const TypeName&)
 
-#endif //PYSCHEDULE_LIB_INCLUDES_
+#endif //PYSCHEDULE_LIB_INCLUDE_

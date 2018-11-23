@@ -1,0 +1,15 @@
+#ifndef PYSCHEDULE_MACRO_H_
+#define PYSCHEDULE_MACRO_H_
+
+#define PORT_BASE 20000
+#define ID_BASE 1
+
+#define LOCALHOST "127.0.0.1"
+
+#define MESSAGE_SIZE_MAX 256
+#define MESSAGE_DATA_MAX 128
+
+#define THREAD_NUM 4
+
+#endif //PYSCHEDULE_MACRO_H_
+
