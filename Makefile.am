@@ -18,10 +18,16 @@ include_HEADERS = include/lib_includes.h \
                    include/message.h
 
 bin_PROGRAMS = bin/node_test
-bin_node_test_SOURCES = src/node.cc \
-                         src/node_test.cc
+#bin_PROGRAMS = bin/node_test \
+#                bin/basic_test
 
-#bin_PROGRAMS = bin/node_test bin/basic_test
+bin_node_test_SOURCES = src/node.cc \
+                         src/message.cc \
+                         src/test/basic_message.h \
+                         src/test/node_test.h \
+                         src/test/node_test.cc \
+                         src/test/test.cc
+
 #bin_basic_test_SOURCES = src/node.cc \
 #                          src/basic/basic.h \
 #                          src/basic/usernode.h \
@@ -29,4 +35,4 @@ bin_node_test_SOURCES = src/node.cc \
 #                          src/basic/gatenode.h \
 #                          src/basic/gatenode.cc \
 #                          src/basic/basic_test.cc
-
+#

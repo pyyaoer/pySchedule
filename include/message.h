@@ -1,6 +1,8 @@
 #ifndef PYSCHEDULE_MESSAGE_H_
 #define PYSCHEDULE_MESSAGE_H_
 
+#include "include/lib_includes.h"
+
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
   TypeName(const TypeName&); \
   void operator=(const TypeName&)
@@ -8,6 +10,7 @@
 class Message {
   friend class boost::serialization::access;
   template <class Archive>
+//  void serialize(Archive & ar, const unsigned int version);
   void serialize(Archive & ar, const unsigned int version) {
     ar & src_port_;
     ar & dst_port_;
@@ -34,27 +37,14 @@ class Message {
     auto const ptr = reinterpret_cast<unsigned char*>(&data);
     data_.assign(ptr, ptr + sizeof(T));
   }
+
   template <class T>
   void GetData(T &data) {
     std::memcpy(data, data_.data(), sizeof(T));
   }
 
   // Debug only
-  void PrintMessage() { 
-    std::cout << "\tsrc_port_: " << src_port_ << std::endl
-              << "\tdst_port_: " << dst_port_ << std::endl
-              << "\ttype_: " << type_ << std::endl
-              << "\tcreate_time_: " << create_time_ << std::endl
-              << "\tdata_.size(): " << data_.size() << std::endl;
-
-    std::ios_base::fmtflags cout_flags( std::cout.flags() );
-    std::cout << "\tdata_ :";
-    for (auto i : data_) {
-      std::cout << std::hex << std::setw(2) << i << " ";
-    }
-    std::cout << std::endl;
-    std::cout.flags(cout_flags);
-  }
+  void PrintMessage();
 
  protected:
   short src_port_;
