@@ -12,7 +12,9 @@ class Node : public std::enable_shared_from_this<Node> {
   using shared_socket_t = std::shared_ptr<boost::asio::ip::tcp::socket>;
 
  public:
-  explicit Node(int node_id, boost::asio::io_service& service);
+  explicit Node(int node_id, boost::asio::io_service& service)
+   : io_service_(service), acceptor_(service),
+     node_id_(node_id), port_(PORT_BASE + node_id) {}
   ~Node() {};
 
   void Run();

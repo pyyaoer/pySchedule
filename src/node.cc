@@ -1,12 +1,6 @@
 #include <string.h>
 #include "include/node.h"
 
-Node::Node(int node_id, boost::asio::io_service& service) 
-  : io_service_(service), acceptor_(service) {
-  node_id_ = node_id;
-  port_ = PORT_BASE + node_id;
-} 
-
 void Node::SendMessage(std::shared_ptr<Message> msg) {
   boost::asio::ip::tcp::resolver resolver(io_service_);
   boost::asio::ip::tcp::socket socket(io_service_);

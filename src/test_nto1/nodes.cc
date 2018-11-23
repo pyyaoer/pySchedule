@@ -1,0 +1,36 @@
+#include "nodes.h"
+
+BOOST_CLASS_EXPORT(BasicMessage)
+
+void Client::HandleMessage(std::shared_ptr<Message> msg) {
+  std::cout << "Round " << cnt++ << " Client" << node_id_ << std::endl;
+  std::ostringstream archive_stream;
+  boost::archive::text_oarchive archive(archive_stream);
+  archive << msg;
+  std::cout << "Receive message" << std::endl;
+  msg->PrintMessage();
+
+  std::shared_ptr<Message> new_msg = std::make_shared<BasicMessage>(port_, msg->GetSrcPort());
+  BasicData d = { .data = "Client", };
+  new_msg->SetData(d);
+  std::cout << "Send message" << std::endl;
+  new_msg->PrintMessage();
+  AtomicPushOutMessage(new_msg);
+}
+
+void Server::HandleMessage(std::shared_ptr<Message> msg) {
+  std::cout << "Round " << cnt++ << " Server" << std::endl;
+  std::ostringstream archive_stream;
+  boost::archive::text_oarchive archive(archive_stream);
+  archive << msg;
+  std::cout << "Receive message" << std::endl;
+  msg->PrintMessage();
+
+  std::shared_ptr<Message> new_msg = std::make_shared<BasicMessage>(port_, msg->GetSrcPort());
+  BasicData d = { .data = "Server", };
+  new_msg->SetData(d);
+  std::cout << "Send message" << std::endl;
+  new_msg->PrintMessage();
+  AtomicPushOutMessage(new_msg);
+}
+
