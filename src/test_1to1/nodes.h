@@ -1,5 +1,5 @@
-#ifndef PYSCHEDULE_TEST_NODES_H_
-#define PYSCHEDULE_TEST_NODES_H_
+#ifndef PYSCHEDULE_NODES_H_
+#define PYSCHEDULE_NODES_H_
 
 #include "include/node.h"
 #include "messages.h"
@@ -32,4 +32,4 @@ class Server : public Node {
   int cnt;
 };
 
-#endif // PYSCHEDULE_TEST_NODES_H_
+#endif // PYSCHEDULE_NODES_H_

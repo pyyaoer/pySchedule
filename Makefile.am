@@ -17,16 +17,16 @@ include_HEADERS = include/lib_includes.h \
                    include/macros.h \
                    include/message.h
 
-bin_PROGRAMS = bin/node_test
+bin_PROGRAMS = bin/test_1to1
 #bin_PROGRAMS = bin/node_test \
 #                bin/basic_test
 
-bin_node_test_SOURCES = src/node.cc \
+bin_test_1to1_SOURCES = src/node.cc \
                          src/message.cc \
-                         src/test/messages.h \
-                         src/test/nodes.h \
-                         src/test/nodes.cc \
-                         src/test/main.cc
+                         src/test_1to1/messages.h \
+                         src/test_1to1/nodes.h \
+                         src/test_1to1/nodes.cc \
+                         src/test_1to1/main.cc
 
 #bin_basic_test_SOURCES = src/node.cc \
 #                          src/basic/basic.h \
