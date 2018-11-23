@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <ctime>
 
-#include "node_test.h"
+#include "nodes.h"
 
 int main(void) {
   std::srand(std::time(nullptr));

@@ -1,4 +1,4 @@
-#include "node_test.h"
+#include "nodes.h"
 
 BOOST_CLASS_EXPORT(BasicMessage)
 

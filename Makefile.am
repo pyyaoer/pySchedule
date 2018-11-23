@@ -23,10 +23,10 @@ bin_PROGRAMS = bin/node_test
 
 bin_node_test_SOURCES = src/node.cc \
                          src/message.cc \
-                         src/test/basic_message.h \
-                         src/test/node_test.h \
-                         src/test/node_test.cc \
-                         src/test/test.cc
+                         src/test/messages.h \
+                         src/test/nodes.h \
+                         src/test/nodes.cc \
+                         src/test/main.cc
 
 #bin_basic_test_SOURCES = src/node.cc \
 #                          src/basic/basic.h \

@@ -2,7 +2,7 @@
 #define PYSCHEDULE_NODE_TEST_H_
 
 #include "include/node.h"
-#include "basic_message.h"
+#include "messages.h"
 
 #define TESTNODE_CLIENT_ID 1
 #define TESTNODE_SERVER_ID 2
