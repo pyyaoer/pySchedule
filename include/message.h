@@ -3,10 +3,6 @@
 
 #include "include/lib_includes.h"
 
-#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&); \
-  void operator=(const TypeName&)
-
 class Message {
   friend class boost::serialization::access;
   template <class Archive>
@@ -55,5 +51,19 @@ class Message {
 
   DISALLOW_COPY_AND_ASSIGN(Message);
 };
+
+#define DERIVED_CLASS_SERIALIZATION \
+  friend class boost::serialization::access; \
+  template <class Archive> \
+  void serialize(Archive & ar, const unsigned int version) { \
+    ar & boost::serialization::base_object<Message>(*this); \
+  }
+
+#define DERIVED_CLASS_CONSTRUCTOR(TypeName) TypeName(){}
+
+#define DERIVED_CLASS_PREREQUISITES(TypeName) \
+ private: DERIVED_CLASS_SERIALIZATION; \
+ public: DERIVED_CLASS_CONSTRUCTOR(TypeName); \
+ public: DISALLOW_COPY_AND_ASSIGN(TypeName);
 
 #endif // PYSCHEDULE_MESSAGE_H_

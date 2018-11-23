@@ -17,4 +17,8 @@
 #include <mutex>
 #include <sstream>
 
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
+  TypeName(const TypeName&); \
+  void operator=(const TypeName&)
+
 #endif //PYSCHEDULE_LIB_INCLUDES_

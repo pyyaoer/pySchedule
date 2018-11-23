@@ -7,10 +7,6 @@
 #include "include/lib_includes.h"
 #include "include/message.h"
 
-#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&); \
-  void operator=(const TypeName&)
-
 class Node : public std::enable_shared_from_this<Node> {
 
   using shared_socket_t = std::shared_ptr<boost::asio::ip::tcp::socket>;
