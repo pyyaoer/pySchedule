@@ -17,26 +17,6 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
   std::cout << "Sent!" << std::endl;
 }
 
-void Node::ReadMessage(const boost::system::error_code& error) {
-  // TODO: Do not ignore the error here (but I observe that the error is always "Operation canceled" error which may be ignored)
-  if (error) {
-    //std::cout << "Something strange happened : " << error.message() << std::endl;
-  }
-  std::shared_ptr<Message> msg = nullptr;
-  {
-    std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
-    std::istringstream archive_stream(archive_data);
-    boost::archive::text_iarchive archive(archive_stream);
-    archive >> msg;
-  }
-
-  AtomicPushInMessage(msg);
-  for (int i = 0; i < MESSAGE_SIZE_MAX; ++i) {
-    std::cout << (int)socket_buffer[i];
-  }
-  std::cout << std::endl;
-}
-
 void AtomicPushMessage(std::shared_ptr<Message> msg, std::mutex &mutex, std::queue<std::shared_ptr<Message> > &queue) {
   std::lock_guard<std::mutex> guard(mutex);
   queue.push(msg);
@@ -68,25 +48,24 @@ std::shared_ptr<Message> Node::AtomicPopOutMessage() {
   return AtomicPopMessage(out_mutex_, out_msg_);
 }
 
-void Node::RecvMessage(shared_socket_t socket,
+void Node::RecvMessage(shared_handler_t handler,
   boost::system::error_code const& error) {
 
   if (error) return;
   // Push the new messagoutinto in_msg_ queue
-  socket->async_read_some(boost::asio::buffer(socket_buffer, MESSAGE_SIZE_MAX),
-    boost::bind(&Node::ReadMessage, shared_from_this(), boost::asio::placeholders::error));
-  shared_socket_t new_socket = std::make_shared<boost::asio::ip::tcp::socket>(io_service_);
-  acceptor_.async_accept(*new_socket, [=](boost::system::error_code e) { RecvMessage(new_socket, e); });
+  handler->DoRead(shared_from_this());
+  shared_handler_t new_handler = std::make_shared<ConnectionHandler>(io_service_);
+  acceptor_.async_accept(new_handler->GetSocket(), [=](boost::system::error_code e) { RecvMessage(new_handler, e); });
 }
 
 void Node::Run() {
-  auto socket = std::make_shared<boost::asio::ip::tcp::socket>(io_service_);
+  auto handler = std::make_shared<ConnectionHandler>(io_service_);
   boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port_);
   acceptor_.open(endpoint.protocol());
   acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
   acceptor_.bind(endpoint);
-  acceptor_.listen();
-  acceptor_.async_accept(*socket, [=](boost::system::error_code e) { RecvMessage(socket, e); });
+  acceptor_.listen(boost::asio::socket_base::max_connections);
+  acceptor_.async_accept(handler->GetSocket(), [=](boost::system::error_code e) { RecvMessage(handler, e); });
 
   // Threads for receiving messages
   for (int i = 0; i < THREAD_NUM; ++i) {
@@ -121,3 +100,19 @@ void Node::Run() {
   }
 }
 
+void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error) { 
+  std::shared_ptr<Message> msg = nullptr;
+  try {
+      std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
+      std::istringstream archive_stream(archive_data);
+      boost::archive::text_iarchive archive(archive_stream);
+      archive >> msg;
+  }
+  catch (...) {
+    for (int i = 0; i < MESSAGE_SIZE_MAX; ++i) {
+      std::cout << (int)socket_buffer[i];
+    }
+    std::cout << std::endl;
+  }
+  node->AtomicPushInMessage(msg);
+}

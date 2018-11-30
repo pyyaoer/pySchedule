@@ -9,7 +9,24 @@
 
 class Node : public std::enable_shared_from_this<Node> {
 
-  using shared_socket_t = std::shared_ptr<boost::asio::ip::tcp::socket>;
+  class ConnectionHandler : public std::enable_shared_from_this<ConnectionHandler> {
+   public:
+    ConnectionHandler(boost::asio::io_service& service)
+     : io_service_(service), socket_(service) {}
+    boost::asio::ip::tcp::socket& GetSocket() { return socket_; }
+    void DoRead(std::shared_ptr<Node> node) {
+      socket_.async_read_some(boost::asio::buffer(socket_buffer, MESSAGE_SIZE_MAX),
+        boost::bind(&ConnectionHandler::HandleRead, shared_from_this(), node, boost::asio::placeholders::error));
+    }
+    void HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error);
+  
+   private:
+    boost::asio::io_service& io_service_;
+    boost::asio::ip::tcp::socket socket_;
+    char socket_buffer[MESSAGE_SIZE_MAX];
+  };
+  
+  using shared_handler_t = std::shared_ptr<ConnectionHandler>;
 
  public:
   explicit Node(int node_id, boost::asio::io_service& service)
@@ -33,13 +50,10 @@ class Node : public std::enable_shared_from_this<Node> {
  private:
 
   // Recv -> Read -> Handle -> Send
-  void RecvMessage(shared_socket_t socket,
+  void RecvMessage(shared_handler_t handler,
     boost::system::error_code const& error);
-  void ReadMessage(const boost::system::error_code& error);
   virtual void HandleMessage(std::shared_ptr<Message> msg) = 0;
   void SendMessage(std::shared_ptr<Message> msg);
-
-  char socket_buffer[MESSAGE_SIZE_MAX];
 
   boost::asio::io_service& io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
@@ -51,6 +65,5 @@ class Node : public std::enable_shared_from_this<Node> {
 
   DISALLOW_COPY_AND_ASSIGN(Node);
 };
-
 
 #endif // PYSCHEDULE_NODE_H_
