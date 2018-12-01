@@ -62,6 +62,7 @@ class Message {
 #define ToClassName(MessageName) MessageName ## Message
 #define ToEnumName(MessageName) e ## MessageName
 #define ToDataName(MessageName) MessageName ## Data
+#define ToHandleName(MessageName) HandleMessage_ ## MessageName
 
 #define DERIVED_CLASS_CONSTRUCTORS_RAW(ClassName, EnumName, DataName) \
   ClassName(){} \
@@ -77,5 +78,14 @@ class Message {
  private: DERIVED_CLASS_SERIALIZATION \
  public: DERIVED_CLASS_CONSTRUCTORS(MessageName) \
  public: DISALLOW_COPY_AND_ASSIGN(ToClassName(MessageName))
+
+#define HandleMessageCase(MessageName, Var) \
+  case ToEnumName(MessageName): \
+    ToHandleName(MessageName)(std::dynamic_pointer_cast<ToClassName(MessageName)>(Var)); \
+    break
+
+#define HandleMessageDefault \
+  default: \
+    std::cout << "Error in HandleMessage: message type undefined" << std::endl
 
 #endif // PYSCHEDULE_MESSAGE_H_
