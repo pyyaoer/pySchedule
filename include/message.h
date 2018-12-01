@@ -59,11 +59,23 @@ class Message {
     ar & boost::serialization::base_object<Message>(*this); \
   }
 
-#define DERIVED_CLASS_CONSTRUCTOR(TypeName) TypeName(){}
+#define ToClassName(MessageName) MessageName ## Message
+#define ToEnumName(MessageName) e ## MessageName
+#define ToDataName(MessageName) MessageName ## Data
 
-#define DERIVED_CLASS_PREREQUISITES(TypeName) \
+#define DERIVED_CLASS_CONSTRUCTORS_RAW(ClassName, EnumName, DataName) \
+  ClassName(){} \
+  explicit ClassName(short src_port, short dst_port) \
+    : Message(src_port, dst_port, EnumName, sizeof(DataName)) {}
+
+#define DERIVED_CLASS_CONSTRUCTORS(MessageName) \
+  DERIVED_CLASS_CONSTRUCTORS_RAW(ToClassName(MessageName), \
+                                 ToEnumName(MessageName), \
+                                 ToDataName(MessageName))
+
+#define DERIVED_CLASS_PREREQUISITES(MessageName) \
  private: DERIVED_CLASS_SERIALIZATION \
- public: DERIVED_CLASS_CONSTRUCTOR(TypeName) \
- public: DISALLOW_COPY_AND_ASSIGN(TypeName)
+ public: DERIVED_CLASS_CONSTRUCTORS(MessageName) \
+ public: DISALLOW_COPY_AND_ASSIGN(ToClassName(MessageName))
 
 #endif // PYSCHEDULE_MESSAGE_H_

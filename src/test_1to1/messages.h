@@ -3,7 +3,7 @@
 
 #include "include/message.h"
 
-enum eMessageType{ BASIC = 0 };
+enum eMessageType{ eBasic = 0 };
 
 typedef struct {
   char data[7];
@@ -11,11 +11,7 @@ typedef struct {
 
 // Message with at most 7 characters
 class BasicMessage: public Message {
-  DERIVED_CLASS_PREREQUISITES(BasicMessage);
-
- public:
-  explicit BasicMessage(short src_port, short dst_port)
-    : Message(src_port, dst_port, BASIC, sizeof(BasicData)) {}
+  DERIVED_CLASS_PREREQUISITES(Basic);
 };
 
 #endif // PYSCHEDULE_MESSAGES_H_
