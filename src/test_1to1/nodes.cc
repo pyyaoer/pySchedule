@@ -9,6 +9,7 @@ void Client::HandleMessage(std::shared_ptr<Message> msg) {
   archive << msg;
   std::cout << "Receive message" << std::endl;
   msg->PrintMessage();
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
 
   std::shared_ptr<Message> new_msg = std::make_shared<BasicMessage>(port_, msg->GetSrcPort());
   BasicData d = { .data = "Client", };
@@ -25,6 +26,7 @@ void Server::HandleMessage(std::shared_ptr<Message> msg) {
   archive << msg;
   std::cout << "Receive message" << std::endl;
   msg->PrintMessage();
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
 
   std::shared_ptr<Message> new_msg = std::make_shared<BasicMessage>(port_, msg->GetSrcPort());
   BasicData d = { .data = "Server", };

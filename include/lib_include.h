@@ -9,12 +9,13 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 
 #include <iostream>
 #include <thread>
 #include <memory>
 #include <queue>
-#include <mutex>
 #include <sstream>
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \

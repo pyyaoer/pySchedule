@@ -43,23 +43,19 @@ void Node::Run() {
 
   // Threads for handling messages in the in_msg_ queue
   thread_pool_.emplace_back( [=]{
-    std::shared_ptr<Message> msg = nullptr;
+    // Waiting for all nodes to be alive
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     while(true) {
-      boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-      if ((msg = in_msg_.pop(nullptr)) != nullptr) {
-        HandleMessage(msg);
-      }
+      HandleMessage(in_msg_.pop());
     }
   });
 
   // Threads for sending messages in the out_msg_ queue
   thread_pool_.emplace_back( [=]{
-    std::shared_ptr<Message> msg = nullptr;
+    // Waiting for all nodes to be alive
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     while(true) {
-      boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-      if ((msg = out_msg_.pop(nullptr)) != nullptr) {
-        SendMessage(msg);
-      }
+      SendMessage(out_msg_.pop());
     }
   });
 

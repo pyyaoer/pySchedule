@@ -6,25 +6,27 @@
 template <class T>
 class SafeQueue {
  public:
-  SafeQueue() {};
+  SafeQueue(): queue_(), mutex_(), cond_() {};
   void push(T t) {
-    std::lock_guard<std::mutex> guard(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     queue_.push(t);
+    cond_.notify_one();
   }
   // dft: default value
-  T pop(T dft) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    T t = dft;
-    if (not queue_.empty()) {
-      t = queue_.front();
-      queue_.pop();
+  T pop() {
+    boost::mutex::scoped_lock lock(mutex_);
+    while (queue_.empty()) {
+      cond_.wait(lock);
     }
+    T t = queue_.front();
+    queue_.pop();
     return t;
   }
 
  private:
-  std::mutex mutex_;
   std::queue<T> queue_;
+  mutable boost::mutex mutex_;
+  boost::condition_variable cond_;
 
   DISALLOW_COPY_AND_ASSIGN(SafeQueue);
 };

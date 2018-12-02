@@ -10,7 +10,7 @@ void Message::PrintMessage() {
   std::ios_base::fmtflags cout_flags( std::cout.flags() );
   std::cout << "\tdata_ :";
   for (auto i : data_) {
-    std::cout << std::hex << std::setw(2) << i << " ";
+    std::cout << std::setw(2) << i << " ";
   }
   std::cout << std::endl;
   std::cout.flags(cout_flags);
