@@ -2,6 +2,7 @@
 #define PYSCHEDULE_MACRO_H_
 
 #define PORT_BASE 20000
+#define GET_PORT(id) (PORT_BASE + id)
 #define ID_BASE 1
 
 #define LOCALHOST "127.0.0.1"

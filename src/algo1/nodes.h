@@ -6,6 +6,7 @@
 #include "macros.h"
 
 class PNode : public Node {
+
  public:
   explicit PNode(int node_id, boost::asio::io_service& service)
     : Node(node_id, service) {}
@@ -24,12 +25,19 @@ class PNode : public Node {
 
 class Gate : public Node {
 
+  using RequestQueue = SafeQueue<std::shared_ptr<RequestData> >;
+
  public:
   explicit Gate(int node_id, boost::asio::io_service& service)
-    : Node(node_id, service) {}
+    : Node(node_id, service) {
+    for (int i = 0; i < TENENT_NUM; ++i) {
+      auto rq = std::make_shared<RequestQueue>();
+      requests_.push_back(rq);
+    }
+  }
 
  private:
-  SafeQueue<std::shared_ptr<RequestData>> requests_;
+  std::vector<std::shared_ptr<RequestQueue> > requests_;
 
   void HandleMessage(std::shared_ptr<Message> msg) {
     switch (msg->GetType()) {

@@ -5,31 +5,18 @@ BOOST_CLASS_EXPORT(RequestMessage)
 BOOST_CLASS_EXPORT(CompleteMessage)
 BOOST_CLASS_EXPORT(ActiveMessage)
 
-/*
-void User::HandleMessage(std::shared_ptr<Message> msg) {
-  std::cout << "Round " << cnt++ << " Client" << node_id_ << std::endl;
-  std::ostringstream archive_stream;
-  boost::archive::text_oarchive archive(archive_stream);
-  archive << msg;
-  std::cout << "Receive message" << std::endl;
-  msg->PrintMessage();
-
-  std::shared_ptr<Message> new_msg = std::make_shared<BasicMessage>(port_, msg->GetSrcPort());
-  BasicData d = { .data = "Client", };
-  new_msg->SetData(d);
-  std::cout << "Send message" << std::endl;
-  new_msg->PrintMessage();
-  AtomicPushOutMessage(new_msg);
-}
-*/
-
 void PNode::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
 }
 
 void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
+  // Push the new request from User(tenent t) to the requests_[t] queue
   auto request = std::make_shared<RequestData>();
   msg->GetData(*request);
-  requests_.push(request);
+  requests_[request->tenent]->push(request);
+  // Send a RequestMessage to PNode
+  std::shared_ptr<Message> new_msg = std::make_shared<RequestMessage>(port_, GET_PORT(PNODE_ID_START));
+  new_msg->SetData(*request);
+  out_msg_.push(new_msg);
 }
 
 void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
@@ -51,7 +38,7 @@ void User::Run() {
       int time_interval = rand_time(gen);
       int hardness_val = rand_hardness(gen);
       boost::this_thread::sleep_for(boost::chrono::milliseconds(time_interval));
-      std::shared_ptr<Message> msg = std::make_shared<RequestMessage>(port_, PORT_BASE + gate_id);
+      std::shared_ptr<Message> msg = std::make_shared<RequestMessage>(port_, GET_PORT(gate_id));
       RequestData r = {
         .tenent = tenent_id_,
 	.gate = gate_id,
