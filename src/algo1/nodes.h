@@ -47,6 +47,7 @@ class User : public Node {
     : Node(node_id, service), tenent_id_(tenent_id) {}
   // A function should be defined here for statistics
   void GetStatistics();
+  void Run();
 
  private:
   void HandleMessage(std::shared_ptr<Message> msg) {
