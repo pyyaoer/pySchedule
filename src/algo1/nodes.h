@@ -23,11 +23,14 @@ class PNode : public Node {
 };
 
 class Gate : public Node {
+
  public:
   explicit Gate(int node_id, boost::asio::io_service& service)
     : Node(node_id, service) {}
 
  private:
+  SafeQueue<std::shared_ptr<RequestData>> requests_;
+
   void HandleMessage(std::shared_ptr<Message> msg) {
     switch (msg->GetType()) {
       HandleMessageCase(Request, msg);

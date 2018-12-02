@@ -10,7 +10,7 @@ class Client : public Node {
   explicit Client(int node_id, boost::asio::io_service& service)
     : Node(node_id, service), cnt(0) {
     std::shared_ptr<Message> init_msg = std::make_shared<BasicMessage>(port_, GET_PORT(SERVER_ID));
-    AtomicPushOutMessage(init_msg);
+    out_msg_.push(init_msg);
   }
 
  private:

@@ -6,6 +6,7 @@
 #include "include/macro.h"
 #include "include/lib_include.h"
 #include "include/message.h"
+#include "include/safequeue.h"
 
 class Node : public std::enable_shared_from_this<Node> {
 
@@ -37,18 +38,13 @@ class Node : public std::enable_shared_from_this<Node> {
   void Run();
 
  protected:
-  // Functions to push and pop messages from in/out message queue atomically
-  void AtomicPushInMessage(std::shared_ptr<Message> msg);
-  std::shared_ptr<Message> AtomicPopInMessage();
-  void AtomicPushOutMessage(std::shared_ptr<Message> msg);
-  std::shared_ptr<Message> AtomicPopOutMessage();
-
   int node_id_;
   short port_;
   std::vector<std::thread> thread_pool_;
+  SafeQueue<std::shared_ptr<Message> > in_msg_;
+  SafeQueue<std::shared_ptr<Message> > out_msg_;
 
  private:
-
   // Recv -> Read -> Handle -> Send
   void RecvMessage(shared_handler_t handler,
     boost::system::error_code const& error);
@@ -57,11 +53,6 @@ class Node : public std::enable_shared_from_this<Node> {
 
   boost::asio::io_service& io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
-
-  std::mutex in_mutex_;
-  std::mutex out_mutex_;
-  std::queue<std::shared_ptr<Message> > in_msg_;
-  std::queue<std::shared_ptr<Message> > out_msg_;
 
   DISALLOW_COPY_AND_ASSIGN(Node);
 };

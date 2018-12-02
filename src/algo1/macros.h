@@ -4,7 +4,7 @@
 #define PNODE_NUM 1
 #define GATE_NUM 4
 #define USER_NUM 16
-#define TENENT_NUM 2
+#define TENENT_NUM 3
 
 #define PNODE_ID_START ID_BASE
 #define PNODE_ID_END (PNODE_ID_START + PNODE_NUM)

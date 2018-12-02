@@ -17,37 +17,6 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
   std::cout << "Sent!" << std::endl;
 }
 
-void AtomicPushMessage(std::shared_ptr<Message> msg, std::mutex &mutex, std::queue<std::shared_ptr<Message> > &queue) {
-  std::lock_guard<std::mutex> guard(mutex);
-  queue.push(msg);
-}
-
-std::shared_ptr<Message> AtomicPopMessage(std::mutex &mutex, std::queue<std::shared_ptr<Message> > &queue) {
-  std::shared_ptr<Message> msg = nullptr;
-  std::lock_guard<std::mutex> guard(mutex);
-  if (not queue.empty()) {
-    msg = queue.front();
-    queue.pop();
-  }
-  return msg;
-}
-
-void Node::AtomicPushInMessage(std::shared_ptr<Message> msg) {
-  AtomicPushMessage(msg, in_mutex_, in_msg_);
-}
-
-std::shared_ptr<Message> Node::AtomicPopInMessage() {
-  return AtomicPopMessage(in_mutex_, in_msg_);
-}
-
-void Node::AtomicPushOutMessage(std::shared_ptr<Message> msg) {
-  AtomicPushMessage(msg, out_mutex_, out_msg_);
-}
-
-std::shared_ptr<Message> Node::AtomicPopOutMessage() {
-  return AtomicPopMessage(out_mutex_, out_msg_);
-}
-
 void Node::RecvMessage(shared_handler_t handler,
   boost::system::error_code const& error) {
 
@@ -77,7 +46,7 @@ void Node::Run() {
     std::shared_ptr<Message> msg = nullptr;
     while(true) {
       boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-      if ((msg = AtomicPopInMessage()) != nullptr) {
+      if ((msg = in_msg_.pop(nullptr)) != nullptr) {
         HandleMessage(msg);
       }
     }
@@ -88,7 +57,7 @@ void Node::Run() {
     std::shared_ptr<Message> msg = nullptr;
     while(true) {
       boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-      if ((msg = AtomicPopOutMessage()) != nullptr) {
+      if ((msg = out_msg_.pop(nullptr)) != nullptr) {
         SendMessage(msg);
       }
     }
@@ -114,5 +83,5 @@ void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost
     }
     std::cout << std::endl;
   }
-  node->AtomicPushInMessage(msg);
+  node->in_msg_.push(msg);
 }

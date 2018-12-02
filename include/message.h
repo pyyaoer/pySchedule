@@ -36,7 +36,7 @@ class Message {
 
   template <class T>
   void GetData(T &data) {
-    std::memcpy(data, data_.data(), sizeof(T));
+    std::memcpy(&data, data_.data(), sizeof(T));
   }
 
   // Debug only

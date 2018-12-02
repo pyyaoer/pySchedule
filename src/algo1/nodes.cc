@@ -27,6 +27,9 @@ void PNode::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
 }
 
 void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
+  auto request = std::make_shared<RequestData>();
+  msg->GetData(*request);
+  requests_.push(request);
 }
 
 void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
@@ -55,7 +58,7 @@ void User::Run() {
 	.hardness = hardness_val,
       };
       msg->SetData(r);
-      AtomicPushOutMessage(msg);
+      out_msg_.push(msg);
     }
   });
   Node::Run();
