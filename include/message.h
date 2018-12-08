@@ -26,6 +26,7 @@ class Message {
   short GetSrcPort() { return src_port_; }
   short GetDstPort() { return dst_port_; }
   short GetType() { return type_; }
+  long long GetCreateTime() { return create_time_; }
 
   template <class T>
   void SetData(T data) {

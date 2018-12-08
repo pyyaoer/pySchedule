@@ -7,6 +7,7 @@
 #include "include/lib_include.h"
 #include "include/message.h"
 #include "include/safequeue.h"
+#include "include/safemap.h"
 
 class Node : public std::enable_shared_from_this<Node> {
 
@@ -32,7 +33,7 @@ class Node : public std::enable_shared_from_this<Node> {
  public:
   explicit Node(int node_id, boost::asio::io_service& service)
    : io_service_(service), acceptor_(service),
-     node_id_(node_id), port_(PORT_BASE + node_id) {}
+     node_id_(node_id), port_(GET_PORT(node_id)) {}
   ~Node() {};
 
   void Run();

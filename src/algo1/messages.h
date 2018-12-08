@@ -9,9 +9,11 @@ enum eMessageType{ eRequest = 0, eComplete, eActive };
 // Gate g accepts an I/O request from User (belongs to tenent t)
 // User -> Gate -> PNode
 typedef struct {
-  int tenent;
-  int gate;
-  int hardness;
+  int id; // Message ID
+  int user; // User ID
+  int tenent; // Tenent ID
+  int gate; // Gate ID
+  int hardness; // Execution time
 } RequestData;
 
 class RequestMessage: public Message {
@@ -22,6 +24,9 @@ class RequestMessage: public Message {
 // Gate g finishes the request from User
 // Gate -> User
 typedef struct {
+  int id;
+  int tenent;
+  int gate;
   int status;
 } CompleteData;
 
@@ -31,6 +36,7 @@ class CompleteMessage : public Message {
 
 // Message: Active
 // Gate g is allowed to process a request from tenent t
+// PNode -> Gate
 typedef struct {
   int tenent;
 } ActiveData;

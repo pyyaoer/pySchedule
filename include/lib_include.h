@@ -16,6 +16,7 @@
 #include <thread>
 #include <memory>
 #include <queue>
+#include <map>
 #include <sstream>
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
