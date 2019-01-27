@@ -16,8 +16,10 @@
 #include <thread>
 #include <memory>
 #include <queue>
+#include <vector>
 #include <map>
 #include <sstream>
+#include <type_traits>
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
   TypeName(const TypeName&); \

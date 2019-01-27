@@ -9,22 +9,40 @@ class SafeQueue {
   SafeQueue(): queue_(), mutex_(), cond_() {};
   void push(T t) {
     boost::mutex::scoped_lock lock(mutex_);
-    queue_.push(t);
+    queue_.push_front(t);
     cond_.notify_one();
+    if (queue_.size() > 100) {
+      exit(1);
+    }
   }
-  // dft: default value
+
   T pop() {
     boost::mutex::scoped_lock lock(mutex_);
     while (queue_.empty()) {
       cond_.wait(lock);
     }
-    T t = queue_.front();
-    queue_.pop();
+    T t = queue_.back();
+    queue_.pop_back();
     return t;
   }
 
+  T back() {
+    boost::mutex::scoped_lock lock(mutex_);
+    return queue_.back();
+  }
+
+  bool empty() {
+    boost::mutex::scoped_lock lock(mutex_);
+    return queue_.empty();
+  }
+
+  int size() {
+    boost::mutex::scoped_lock lock(mutex_);
+    return queue_.size();
+  }
+
  private:
-  std::queue<T> queue_;
+  std::deque<T> queue_;
   mutable boost::mutex mutex_;
   boost::condition_variable cond_;
 

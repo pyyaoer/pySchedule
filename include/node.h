@@ -8,6 +8,7 @@
 #include "include/message.h"
 #include "include/safequeue.h"
 #include "include/safemap.h"
+#include "include/safelist.h"
 
 class Node : public std::enable_shared_from_this<Node> {
 
@@ -41,6 +42,7 @@ class Node : public std::enable_shared_from_this<Node> {
  protected:
   int node_id_;
   short port_;
+  boost::asio::io_service& io_service_;
   std::vector<std::thread> thread_pool_;
   SafeQueue<std::shared_ptr<Message> > in_msg_;
   SafeQueue<std::shared_ptr<Message> > out_msg_;
@@ -52,7 +54,6 @@ class Node : public std::enable_shared_from_this<Node> {
   virtual void HandleMessage(std::shared_ptr<Message> msg) = 0;
   void SendMessage(std::shared_ptr<Message> msg);
 
-  boost::asio::io_service& io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
 
   DISALLOW_COPY_AND_ASSIGN(Node);

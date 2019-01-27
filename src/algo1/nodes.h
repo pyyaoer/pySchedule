@@ -8,24 +8,36 @@
 class PNode : public Node {
 
   typedef struct {
-    int tenent;
     int gate;
+    int tenent;
     long long time;
   } TodoItem;
-  using TodoQueue = SafeQueue<std::shared_ptr<TodoItem> >;
+  using TodoList = SafeList<std::shared_ptr<TodoItem> >;
   using DoneQueue = SafeQueue<long long>;
+  using IdleQueue = SafeQueue<bool>;
 
  public:
-  explicit PNode(int node_id, boost::asio::io_service& service)
-    : Node(node_id, service) {
+  explicit PNode(int node_id, boost::asio::io_service& service, long long time_window)
+    : Node(node_id, service), time_window_(time_window) {
+    todo_list_ = std::make_shared<TodoList>();
     for (int i = 0; i < TENENT_NUM; ++i) {
-      auto d = std::make_shared<DoneQueue>();
-      done_list_.push_back(d);
+      auto dq = std::make_shared<DoneQueue>();
+      done_list_.push_back(dq);
+    }
+    for (int i = 0; i < GATE_NUM; ++i) {
+      auto iq = std::make_shared<IdleQueue>();
+      for (int j = 0; j < THREADS_PER_GATE; j++) {
+        iq->push(true);
+      }
+      idle_list_.push_back(iq);
     }
   }
+  void Run();
 
  private:
-  TodoQueue todo_list_;
+  long long time_window_;
+  std::shared_ptr<TodoList> todo_list_;
+  std::vector<std::shared_ptr<IdleQueue> > idle_list_;
   std::vector<std::shared_ptr<DoneQueue> > done_list_;
 
   void HandleMessage(std::shared_ptr<Message> msg) {

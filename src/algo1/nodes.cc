@@ -6,26 +6,105 @@ BOOST_CLASS_EXPORT(CompleteMessage)
 BOOST_CLASS_EXPORT(ActiveMessage)
 
 void PNode::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
+  //std::cout << "PNode::HandleMessage_Request" << std::endl;
   // Push the new request to the todo list
   RequestData r;
   msg->GetData(r);
   auto item = std::make_shared<TodoItem>(
     TodoItem {
-      .tenent = r.tenent,
       .gate = r.gate,
+      .tenent = r.tenent,
       .time = msg->GetCreateTime(),
     }
   );
-  todo_list_.push(item);
+  todo_list_->push(item);
 }
 
 void PNode::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
+  //std::cout << "PNode::HandleMessage_Complete" << std::endl;
   CompleteData c;
   msg->GetData(c);
-  done_list_[c.tenent]->push(msg->GetCreateTime());
+  idle_list_[c.gate]->push(true);
 }
 
+void PNode::Run() {
+  thread_pool_.emplace_back( [=]{
+    int d[TENENT_NUM] = {0};
+    // Try to do the scheduling
+    while (true) {
+      // Tenents that are under reservation
+      bool r_schedule = false;
+      int r[TENENT_NUM] = {0};
+      int l[TENENT_NUM] = {0};
+      long long now = time(0);
+      for (int i = 0; i < TENENT_NUM; i++) {
+        // Delete jobs from done_list_ which is out of the current window
+        auto dl = done_list_[i];
+        while(!dl->empty() && (dl->back() + time_window_ < now)) {
+          dl->pop();
+        }
+        // Count the number of done requests in the current window for each tenent
+        // and compare it with reservation demand
+        d[i] = dl->size();
+        r[i] = TENENT_RESERVATION * time_window_ / 1000 - d[i];
+        l[i] = TENENT_LIMIT * time_window_ / 1000 - d[i];
+        r_schedule = r_schedule or (r[i] > 0);
+      }
+      // Find idle gates
+      int g[GATE_NUM] = {0};
+      bool g_schedule;
+      for (int i = 0; i < GATE_NUM; i++) {
+        g[i] = idle_list_[i]->size();
+        g_schedule = g_schedule or (g[i] > 0);
+      }
+      if (g_schedule) {
+        TodoItem t;
+       // Some tenants haven't met their reservation during last window
+       // Make them happy first
+        std::function<bool(TodoItem)> lambda_r =
+          [r, g](TodoItem ti)->bool {
+            return r[ti.tenent] > 0 and g[ti.gate] > 0;
+          };
+        while (todo_list_->erase_match(t, lambda_r)) {
+          r[t.tenent] --;
+          l[t.tenent] --;
+          g[t.gate] --;
+          idle_list_[t.gate]->pop();
+          done_list_[t.tenent]->push(now);
+          ActiveData a = {
+            .tenent = t.tenent,
+          };
+          std::shared_ptr<Message> new_msg = std::make_shared<ActiveMessage>(port_, GET_PORT(GID2NID(t.gate)));
+          new_msg->SetData(a);
+          out_msg_.push(new_msg);
+        }
+        // After trying to meet the reservation demand,
+        // schedule some requests before reaching limit
+        std::function<bool(TodoItem)> lambda_l =
+          [l, g](TodoItem ti)->bool {
+            return l[ti.tenent] > 0 and g[ti.gate] > 0;
+          };
+        while (todo_list_->erase_match(t, lambda_l)) {
+          l[t.tenent] --;
+          g[t.gate] --;
+          idle_list_[t.gate]->pop();
+          done_list_[t.tenent]->push(now);
+          ActiveData a = {
+            .tenent = t.tenent,
+          };
+          std::shared_ptr<Message> new_msg = std::make_shared<ActiveMessage>(port_, GET_PORT(GID2NID(t.gate)));
+          new_msg->SetData(a);
+          out_msg_.push(new_msg);
+        }
+      }
+    }
+  });
+  Node::Run();
+}
+
+
 void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
+  //std::cout << "Gate::HandleMessage_Request" << std::endl;
   // Push the new request from User(tenent t) to the requests_[t] queue
   auto r = std::make_shared<RequestData>();
   msg->GetData(*r);
@@ -36,36 +115,38 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   out_msg_.push(new_msg);
 }
 
+ 
 void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
+  //std::cout << "Gate::HandleMessage_Active" << std::endl;
   // Handle the first request belongs to tenent a.tenent
   ActiveData a;
   msg->GetData(a);
   auto r = requests_[a.tenent]->pop();
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(r->hardness));
-  // Respond to PNode and User with a CompleteMessage
-  std::shared_ptr<Message> new_msg_u = std::make_shared<CompleteMessage>(port_, GET_PORT(r->user));
-  std::shared_ptr<Message> new_msg_p = std::make_shared<CompleteMessage>(port_, GET_PORT(PNODE_ID_START));
-  CompleteData c = {
-    .id = r->id,
-    .tenent = r->tenent,
-    .gate = node_id_,
-    .status = 1,
-  };
-  new_msg_u->SetData(c);
-  new_msg_p->SetData(c);
-  out_msg_.push(new_msg_u);
-  out_msg_.push(new_msg_p);
+  boost::asio::deadline_timer timer(io_service_, boost::posix_time::milliseconds(r->hardness));
+  timer.async_wait([&] (const boost::system::error_code&) {
+    // Respond to PNode and User with a CompleteMessage
+    std::shared_ptr<Message> new_msg_u = std::make_shared<CompleteMessage>(port_, GET_PORT(r->user));
+    std::shared_ptr<Message> new_msg_p = std::make_shared<CompleteMessage>(port_, GET_PORT(PNODE_ID_START));
+    CompleteData c = {
+      .id = r->id,
+      .tenent = r->tenent,
+      .gate = NID2GID(node_id_),
+      .status = 1,
+    };
+    new_msg_u->SetData(c);
+    new_msg_p->SetData(c);
+    out_msg_.push(new_msg_u);
+      //boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    out_msg_.push(new_msg_p);
+  });
 }
 
 void Gate::Run() {
-  thread_pool_.emplace_back( [=]{
-    while(true) {
-    }
-  });
   Node::Run();
 }
 
 void User::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
+  //std::cout << "User::HandleMessage_Complete" << std::endl;
   // Print the total time of request execution
   CompleteData c;
   msg->GetData(c);
@@ -81,22 +162,22 @@ void User::Run() {
   thread_pool_.emplace_back( [=]{
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> rand_gate(GATE_ID_START, GATE_ID_END-1);
+    std::uniform_int_distribution<> rand_gate(GATE_ID_START, GATE_ID_END - 1);
     std::normal_distribution<> rand_time{1000, 100};
     std::normal_distribution<> rand_hardness{100, 10};
     int msg_id = 0;
 
     while(true) {
-      int gate_id = rand_gate(gen);
+      int gate_node_id = rand_gate(gen);
       int time_interval = rand_time(gen);
       int hardness_val = rand_hardness(gen);
       boost::this_thread::sleep_for(boost::chrono::milliseconds(time_interval));
-      std::shared_ptr<Message> msg = std::make_shared<RequestMessage>(port_, GET_PORT(gate_id));
+      std::shared_ptr<Message> msg = std::make_shared<RequestMessage>(port_, GET_PORT(gate_node_id));
       RequestData r = {
         .id = msg_id,
         .user = node_id_,
         .tenent = tenent_id_,
-        .gate = gate_id,
+        .gate = NID2GID(gate_node_id),
         .hardness = hardness_val,
       };
       msg->SetData(r);

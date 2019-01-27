@@ -17,7 +17,8 @@ include_HEADERS = include/lib_include.h \
                    include/macro.h \
                    include/message.h \
                    include/safequeue.h \
-                   include/safemap.h
+                   include/safemap.h \
+                   include/safelist.h
 
 bin_PROGRAMS = bin/test_1to1 \
                 bin/test_nto1 \

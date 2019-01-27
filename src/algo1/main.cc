@@ -8,7 +8,8 @@ int main(void) {
   std::vector<std::shared_ptr<boost::thread>> thread_pool;
 
   for (int i = PNODE_ID_START; i < PNODE_ID_END; ++i) {
-    auto pnode = std::make_shared<PNode>(i, io_service);
+    // Time window: 100ms
+    auto pnode = std::make_shared<PNode>(i, io_service, 20);
     thread_pool.push_back(std::make_shared<boost::thread>(boost::bind(&PNode::Run, pnode)));
   }
   for (int i = GATE_ID_START; i < GATE_ID_END; ++i) {

@@ -14,7 +14,7 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
     archive << msg;
     socket.send(boost::asio::buffer(archive_stream.str()));
   }
-  std::cout << "Sent!" << std::endl;
+  //std::cout << "Send from " << port_ << " to " << msg->GetDstPort() << std::endl;
 }
 
 void Node::RecvMessage(shared_handler_t handler,
