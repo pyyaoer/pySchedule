@@ -11,9 +11,6 @@ class SafeQueue {
     boost::mutex::scoped_lock lock(mutex_);
     queue_.push_front(t);
     cond_.notify_one();
-    if (queue_.size() > 100) {
-      exit(1);
-    }
   }
 
   T pop() {

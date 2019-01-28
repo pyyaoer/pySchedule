@@ -3,7 +3,7 @@
 
 #include "include/message.h"
 
-enum eMessageType{ eRequest = 0, eComplete, eActive };
+enum eMessageType{ eRequest = 10, eComplete, eActive };
 
 // Message: Request
 // Gate g accepts an I/O request from User (belongs to tenent t)

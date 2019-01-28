@@ -20,6 +20,9 @@
 #include <map>
 #include <sstream>
 #include <type_traits>
+#include <chrono>
+
+using namespace std::chrono;
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
   TypeName(const TypeName&); \

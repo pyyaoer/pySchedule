@@ -15,6 +15,7 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
     socket.send(boost::asio::buffer(archive_stream.str()));
   }
   //std::cout << "Send from " << port_ << " to " << msg->GetDstPort() << std::endl;
+  socket.close();
 }
 
 void Node::RecvMessage(shared_handler_t handler,
@@ -73,11 +74,15 @@ void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost
       boost::archive::text_iarchive archive(archive_stream);
       archive >> msg;
   }
-  catch (...) {
+  catch (const std::exception& e) {
+    /*
+    std::cout << e.what() << std::endl;
     for (int i = 0; i < MESSAGE_SIZE_MAX; ++i) {
       std::cout << (int)socket_buffer[i];
     }
     std::cout << std::endl;
+    */
+    return;
   }
   node->in_msg_.push(msg);
 }

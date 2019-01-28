@@ -86,7 +86,7 @@ class Gate : public Node {
 class User : public Node {
  public:
   explicit User(int tenent_id, int node_id, boost::asio::io_service& service)
-    : Node(node_id, service), tenent_id_(tenent_id) {}
+    : Node(node_id, service), tenent_id_(tenent_id), latency_summary_(0), counter_(0) {}
   // A function should be defined here for statistics
   void GetStatistics();
   void Run();
@@ -101,6 +101,11 @@ class User : public Node {
   void HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg);
 
   int tenent_id_;
+
+  long long latency_summary_;
+  long long maximum_latency_;
+  int counter_;
+  int msg_id_;
   SafeMap<int, long long> req_send_time_;
 
   DISALLOW_COPY_AND_ASSIGN(User);

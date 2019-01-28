@@ -14,7 +14,7 @@ class Node : public std::enable_shared_from_this<Node> {
 
   class ConnectionHandler : public std::enable_shared_from_this<ConnectionHandler> {
    public:
-    ConnectionHandler(boost::asio::io_service& service)
+    explicit ConnectionHandler(boost::asio::io_service& service)
      : io_service_(service), socket_(service) {}
     boost::asio::ip::tcp::socket& GetSocket() { return socket_; }
     void DoRead(std::shared_ptr<Node> node) {

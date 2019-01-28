@@ -12,9 +12,6 @@ class SafeList {
   void push(T t) {
     boost::mutex::scoped_lock lock(mutex_);
     list_.push_back(t);
-    if (list_.size() > 100) {
-      exit(1);
-    }
   }
 
   bool erase_match(RT &ret, std::function<bool(RT)> const& p) {

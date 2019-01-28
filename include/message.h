@@ -3,6 +3,8 @@
 
 #include "include/lib_include.h"
 
+#define MESSAGE_DATA_SIZE 50
+
 class Message {
   friend class boost::serialization::access;
   template <class Archive>
@@ -12,14 +14,17 @@ class Message {
     ar & dst_port_;
     ar & type_;
     ar & create_time_;
-    ar & data_;
+    ar & data_size_;
+    for (int i = 0; i < MESSAGE_DATA_SIZE; i ++) {
+      ar & data_[i];
+    }
   }
 
  public:
-  Message() {}
+  Message(): Message(-1, -1, -1, 100) {}
   explicit Message(short src_port, short dst_port, short type, int data_size)
-    : src_port_(src_port), dst_port_(dst_port), type_(type), data_(data_size, '\0') {
-      create_time_ = time(0);
+    : src_port_(src_port), dst_port_(dst_port), type_(type), data_size_(data_size) {
+      create_time_ = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
     }
   virtual ~Message() = default;
 
@@ -30,14 +35,15 @@ class Message {
 
   template <class T>
   void SetData(T data) {
-    assert(sizeof(T) == data_.size());
+    //assert(sizeof(T) == data_size_);
     auto const ptr = reinterpret_cast<unsigned char*>(&data);
-    data_.assign(ptr, ptr + sizeof(T));
+    std::memcpy(data_, ptr, sizeof(T));
   }
 
   template <class T>
   void GetData(T &data) {
-    std::memcpy(&data, data_.data(), sizeof(T));
+    //assert(sizeof(T) == data_size_);
+    std::memcpy(&data, data_, sizeof(T));
   }
 
   // Debug only
@@ -48,7 +54,9 @@ class Message {
   short dst_port_;
   short type_;
   long long create_time_;
-  std::vector<char> data_;
+  int data_size_;
+  unsigned char data_[MESSAGE_DATA_SIZE] = {0};
+  //std::vector<char> data_;
 
   DISALLOW_COPY_AND_ASSIGN(Message);
 };

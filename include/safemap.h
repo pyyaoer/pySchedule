@@ -10,14 +10,14 @@ class SafeMap {
   void insert(K k, T t) {
     boost::mutex::scoped_lock lock(mutex_);
     map_.insert({k, t});
-    if (map_.size() > 100) {
-      exit(1);
-    }
   }
   // dft: default value
   T erase(K k) {
     boost::mutex::scoped_lock lock(mutex_);
-    return map_.erase(k);
+    auto it = map_.find(k);
+    T ret = it->second;
+    map_.erase(it);
+    return ret;
   }
 
  private:
