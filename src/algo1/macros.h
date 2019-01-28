@@ -2,7 +2,7 @@
 #define PYSCHEDULE_MACROS_H_
 
 #define PNODE_NUM 1
-#define GATE_NUM 4
+#define GATE_NUM 1
 #define USER_NUM 16
 #define TENENT_NUM 3
 

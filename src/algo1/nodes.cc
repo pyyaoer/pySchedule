@@ -1,5 +1,6 @@
 #include <random>
 #include "nodes.h"
+#include "include/ddlsession.h"
 
 BOOST_CLASS_EXPORT(RequestMessage)
 BOOST_CLASS_EXPORT(CompleteMessage)
@@ -116,7 +117,6 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   new_msg->SetData(*r);
   out_msg_.push(new_msg);
 }
-
  
 void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
   //std::cout << "Gate::HandleMessage_Active" << std::endl;
@@ -124,9 +124,9 @@ void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
   ActiveData a;
   msg->GetData(a);
   auto r = requests_[a.tenent]->pop();
-  boost::asio::deadline_timer timer(io_service_, boost::posix_time::milliseconds(r->hardness));
+
   auto self(shared_from_this());
-  timer.async_wait([&, self] (const boost::system::error_code&) {
+  auto handler = [&, r, self]() {
     // Respond to PNode and User with a CompleteMessage
     std::shared_ptr<Message> new_msg_u = std::make_shared<CompleteMessage>(port_, GET_PORT(r->user));
     std::shared_ptr<Message> new_msg_p = std::make_shared<CompleteMessage>(port_, GET_PORT(PNODE_ID_START));
@@ -140,7 +140,8 @@ void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
     new_msg_p->SetData(c);
     out_msg_.push(new_msg_u);
     out_msg_.push(new_msg_p);
-  });
+  };
+  boost::make_shared<DDLSession>(io_service_, handler, r->hardness)->start();
 }
 
 void Gate::Run() {
@@ -153,16 +154,15 @@ void User::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
   CompleteData c;
   msg->GetData(c);
   long long create_time = req_send_time_.erase(c.id);
-  long long complete_time = msg->GetCreateTime();
-  long long delta = complete_time - create_time;
-  latency_summary_ += delta;
+  long long complete_time = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
+  long long latency = complete_time - create_time;
+  latency_summary_ += latency;
   counter_ ++;
-  if (maximum_latency_ < delta)
-    maximum_latency_ = delta;
+  if (maximum_latency_ < latency)
+    maximum_latency_ = latency;
   std::cout << node_id_ << "\t"
             << c.id << "\t"
-            << delta << "\t"
-            << counter_ << "/" << msg_id_ << "\t"
+            << latency << "\t"
             << latency_summary_ / counter_ << "\t"
             << maximum_latency_ << "\t"
             << std::endl;
@@ -173,7 +173,7 @@ void User::Run() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> rand_gate(GATE_ID_START, GATE_ID_END - 1);
-    std::normal_distribution<> rand_time{1000, 100};
+    std::normal_distribution<> rand_time{100, 10};
     std::normal_distribution<> rand_hardness{100, 10};
 
     while(true) {

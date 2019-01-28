@@ -75,14 +75,15 @@ void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost
       archive >> msg;
   }
   catch (const std::exception& e) {
-    /*
     std::cout << e.what() << std::endl;
     for (int i = 0; i < MESSAGE_SIZE_MAX; ++i) {
       std::cout << (int)socket_buffer[i];
     }
     std::cout << std::endl;
-    */
-    return;
+    //return;
+    if (msg == nullptr) {
+      std::cout << "????" << std::endl;
+    }
   }
   node->in_msg_.push(msg);
 }
