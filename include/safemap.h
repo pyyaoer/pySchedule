@@ -8,12 +8,12 @@ class SafeMap {
  public:
   SafeMap(): map_(), mutex_() {};
   void insert(K k, T t) {
-    boost::mutex::scoped_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     map_.insert({k, t});
   }
   // dft: default value
   T erase(K k) {
-    boost::mutex::scoped_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     auto it = map_.find(k);
     T ret = it->second;
     map_.erase(it);
@@ -22,7 +22,7 @@ class SafeMap {
 
  private:
   std::map<K, T> map_;
-  mutable boost::mutex mutex_;
+  mutable std::mutex mutex_;
 
   DISALLOW_COPY_AND_ASSIGN(SafeMap);
 };

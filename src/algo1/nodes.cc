@@ -180,7 +180,7 @@ void User::Run() {
       int gate_node_id = rand_gate(gen);
       int time_interval = rand_time(gen);
       int hardness_val = rand_hardness(gen);
-      boost::this_thread::sleep_for(boost::chrono::milliseconds(time_interval));
+      std::this_thread::sleep_for(std::chrono::milliseconds(time_interval));
       std::shared_ptr<Message> msg = std::make_shared<RequestMessage>(port_, GET_PORT(gate_node_id));
       RequestData r = {
         .id = msg_id_,

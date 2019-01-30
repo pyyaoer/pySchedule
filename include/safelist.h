@@ -10,12 +10,12 @@ class SafeList {
  public:
   SafeList(): list_(), mutex_() {};
   void push(T t) {
-    boost::mutex::scoped_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     list_.push_back(t);
   }
 
   bool erase_match(RT &ret, std::function<bool(RT)> const& p) {
-    boost::mutex::scoped_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     for (auto i = list_.begin(); i != list_.end(); i++) {
       ret = std::move(**i);
       if (p(ret)) {
@@ -27,13 +27,13 @@ class SafeList {
   }
 
   int size() {
-    boost::mutex::scoped_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
     return list_.size();
   }
 
  private:
   std::vector<T> list_;
-  mutable boost::mutex mutex_;
+  mutable std::mutex mutex_;
 
   DISALLOW_COPY_AND_ASSIGN(SafeList);
 };

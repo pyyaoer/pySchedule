@@ -45,7 +45,7 @@ void Node::Run() {
   // Threads for handling messages in the in_msg_ queue
   thread_pool_.emplace_back( [=]{
     // Waiting for all nodes to be alive
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while(true) {
       HandleMessage(in_msg_.pop());
     }
@@ -54,7 +54,7 @@ void Node::Run() {
   // Threads for sending messages in the out_msg_ queue
   thread_pool_.emplace_back( [=]{
     // Waiting for all nodes to be alive
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while(true) {
       SendMessage(out_msg_.pop());
     }

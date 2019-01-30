@@ -9,8 +9,6 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
 
 #include <iostream>
 #include <thread>
@@ -21,6 +19,8 @@
 #include <sstream>
 #include <type_traits>
 #include <chrono>
+#include <mutex>
+#include <condition_variable>
 
 using namespace std::chrono;
 

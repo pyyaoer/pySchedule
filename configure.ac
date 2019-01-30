@@ -12,7 +12,10 @@ AC_PROG_CXX
 AC_PROG_CC
 
 # Check for baseline language coverage in the compiler for the C++11 standard.
-AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
+AC_PROG_LIBTOOL
+AC_CONFIG_MACRO_DIR(m4)
+AX_CXX_COMPILE_STDCXX_17([noext], [mandatory])
+#AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
 
 # Checks for libraries.
 #AC_LANG_PUSH([C++])
@@ -20,15 +23,13 @@ AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
 #    [AC_MSG_ERROR(You need the Boost libraries.)])
 #AC_LANG_POP([C++])
 #
-AC_PROG_LIBTOOL
-AC_CONFIG_MACRO_DIR(m4)
 BOOST_REQUIRE([1.59])
 BOOST_SYSTEM
 BOOST_THREAD
 BOOST_SERIALIZATION
 
-LIBS="-lboost_system -lboost_thread -lpthread -lboost_serialization"
-#LIBS="-lpthread"
+LIBS="-lboost_system -lpthread -lboost_thread -lboost_serialization"
+#LIBS="-lboost_system -lboost_thread -lpthread"
 
 # Checks for header files.
 
