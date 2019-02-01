@@ -4,18 +4,23 @@
 void Node::SendMessage(std::shared_ptr<Message> msg) {
   boost::asio::ip::tcp::resolver resolver(io_service_);
   boost::asio::ip::tcp::socket socket(io_service_);
-  boost::asio::ip::tcp::resolver::iterator endpoint = 
-    resolver.resolve(boost::asio::ip::tcp::resolver::query(LOCALHOST, std::to_string(msg->GetDstPort())));
-  boost::asio::connect(socket, endpoint);
 
-  {
-    std::ostringstream archive_stream;
-    boost::archive::text_oarchive archive(archive_stream);
-    archive << msg;
-    socket.send(boost::asio::buffer(archive_stream.str()));
+  msg->SetID(message_id_);
+  for (int i = 0; i < 2; ++i) {
+    boost::asio::ip::tcp::resolver::iterator endpoint = 
+      resolver.resolve(boost::asio::ip::tcp::resolver::query(LOCALHOST, std::to_string(msg->GetDstPort())));
+    boost::asio::connect(socket, endpoint);
+  
+    {
+      std::ostringstream archive_stream;
+      boost::archive::text_oarchive archive(archive_stream);
+      archive << msg;
+      socket.send(boost::asio::buffer(archive_stream.str()));
+    }
+    //std::cout << "Send from " << port_ << " to " << msg->GetDstPort() << std::endl;
+    socket.close();
   }
-  //std::cout << "Send from " << port_ << " to " << msg->GetDstPort() << std::endl;
-  socket.close();
+  message_id_ ++;
 }
 
 void Node::RecvMessage(shared_handler_t handler,
@@ -69,21 +74,32 @@ void Node::Run() {
 void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error) { 
   std::shared_ptr<Message> msg = nullptr;
   try {
-      std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
-      std::istringstream archive_stream(archive_data);
-      boost::archive::text_iarchive archive(archive_stream);
-      archive >> msg;
+    std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
+    std::istringstream archive_stream(archive_data);
+    boost::archive::text_iarchive archive(archive_stream);
+    archive >> msg;
+
+    SeenMsg ret;
+    auto sm = std::make_shared<SeenMsg>(msg->GetID(), msg->GetSrcPort());
+    std::function<bool(SeenMsg)> lambda_msg =
+      [sm](SeenMsg m)->bool {
+        return m.msg_id == sm->msg_id and
+               m.port_id == sm->port_id;
+      };
+    if (!node->seen_msg_->erase_match(ret, lambda_msg)) {
+      node->seen_msg_->push(sm);
+      node->in_msg_.push(msg);
+    }
   }
   catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
+    return;
     for (int i = 0; i < MESSAGE_SIZE_MAX; ++i) {
       std::cout << (int)socket_buffer[i];
     }
     std::cout << std::endl;
-    //return;
     if (msg == nullptr) {
       std::cout << "????" << std::endl;
     }
   }
-  node->in_msg_.push(msg);
 }

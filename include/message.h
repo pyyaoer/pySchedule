@@ -10,6 +10,7 @@ class Message {
   template <class Archive>
 //  void serialize(Archive & ar, const unsigned int version);
   void serialize(Archive & ar, const unsigned int version) {
+    ar & msg_id_;
     ar & src_port_;
     ar & dst_port_;
     ar & type_;
@@ -23,7 +24,7 @@ class Message {
  public:
   Message(): Message(-1, -1, -1, 100) {}
   explicit Message(short src_port, short dst_port, short type, int data_size)
-    : src_port_(src_port), dst_port_(dst_port), type_(type), data_size_(data_size) {
+    : msg_id_(-1), src_port_(src_port), dst_port_(dst_port), type_(type), data_size_(data_size) {
       create_time_ = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
     }
   virtual ~Message() = default;
@@ -32,6 +33,9 @@ class Message {
   short GetDstPort() { return dst_port_; }
   short GetType() { return type_; }
   long long GetCreateTime() { return create_time_; }
+
+  void SetID(int id) { msg_id_ = id; }
+  int GetID() { return msg_id_; }
 
   template <class T>
   void SetData(T data) {
@@ -50,6 +54,7 @@ class Message {
   void PrintMessage();
 
  protected:
+  int msg_id_;
   short src_port_;
   short dst_port_;
   short type_;
