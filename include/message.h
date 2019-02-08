@@ -3,28 +3,34 @@
 
 #include "include/lib_include.h"
 
+#define MESSAGE_ROBUST_TAIL 2
 #define MESSAGE_DATA_SIZE 50
+#define MESSAGE_REAL_DATA_SIZE (MESSAGE_DATA_SIZE + MESSAGE_ROBUST_TAIL)
 
 class Message {
   friend class boost::serialization::access;
   template <class Archive>
 //  void serialize(Archive & ar, const unsigned int version);
   void serialize(Archive & ar, const unsigned int version) {
-    ar & msg_id_;
     ar & src_port_;
     ar & dst_port_;
     ar & type_;
     ar & create_time_;
     ar & data_size_;
-    for (int i = 0; i < MESSAGE_DATA_SIZE; i ++) {
-      ar & data_[i];
+    ar & boost::serialization::make_array(data_, MESSAGE_DATA_SIZE);
+    try {
+      for (int i = MESSAGE_DATA_SIZE; i < MESSAGE_REAL_DATA_SIZE; i ++) {
+        ar & data_[i];
+      }
+    } catch(const std::exception& e) {
+      // Ignore the exceptions for message tail
     }
   }
 
  public:
   Message(): Message(-1, -1, -1, 100) {}
   explicit Message(short src_port, short dst_port, short type, int data_size)
-    : msg_id_(-1), src_port_(src_port), dst_port_(dst_port), type_(type), data_size_(data_size) {
+    : src_port_(src_port), dst_port_(dst_port), type_(type), data_size_(data_size) {
       create_time_ = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
     }
   virtual ~Message() = default;
@@ -33,9 +39,6 @@ class Message {
   short GetDstPort() { return dst_port_; }
   short GetType() { return type_; }
   long long GetCreateTime() { return create_time_; }
-
-  void SetID(int id) { msg_id_ = id; }
-  int GetID() { return msg_id_; }
 
   template <class T>
   void SetData(T data) {
@@ -54,13 +57,12 @@ class Message {
   void PrintMessage();
 
  protected:
-  int msg_id_;
   short src_port_;
   short dst_port_;
   short type_;
   long long create_time_;
   int data_size_;
-  unsigned char data_[MESSAGE_DATA_SIZE] = {0};
+  unsigned char data_[MESSAGE_REAL_DATA_SIZE] = {0};
   //std::vector<char> data_;
 
   DISALLOW_COPY_AND_ASSIGN(Message);

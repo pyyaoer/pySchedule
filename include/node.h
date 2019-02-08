@@ -30,21 +30,10 @@ class Node : public std::enable_shared_from_this<Node> {
   };
   using shared_handler_t = std::shared_ptr<ConnectionHandler>;
 
-  struct SeenMsg {
-    SeenMsg(): SeenMsg(-1, -1) {}
-    SeenMsg(int mid, short pid): msg_id(mid), port_id(pid) {}
-    int msg_id;
-    short port_id;
-  };
-  using SeenMsgList = SafeList<std::shared_ptr<SeenMsg> >;
-
-
  public:
   explicit Node(int node_id, boost::asio::io_service& service)
-   : io_service_(service), acceptor_(service), message_id_(0),
-     node_id_(node_id), port_(GET_PORT(node_id)) {
-       seen_msg_ = std::make_shared<SeenMsgList>();
-     }
+   : io_service_(service), acceptor_(service),
+     node_id_(node_id), port_(GET_PORT(node_id)) {}
   ~Node() {};
 
   void Run();
@@ -52,8 +41,6 @@ class Node : public std::enable_shared_from_this<Node> {
  protected:
   int node_id_;
   short port_;
-  int message_id_;
-  std::shared_ptr<SeenMsgList> seen_msg_;
   boost::asio::io_service& io_service_;
   std::vector<std::thread> thread_pool_;
   SafeQueue<std::shared_ptr<Message> > in_msg_;
