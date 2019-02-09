@@ -3,7 +3,9 @@
 
 #include "include/lib_include.h"
 
+#define MESSAGE_ROBUST_TAIL 2
 #define MESSAGE_DATA_SIZE 50
+#define MESSAGE_REAL_DATA_SIZE (MESSAGE_DATA_SIZE + MESSAGE_ROBUST_TAIL)
 
 class Message {
   friend class boost::serialization::access;
@@ -15,8 +17,13 @@ class Message {
     ar & type_;
     ar & create_time_;
     ar & data_size_;
-    for (int i = 0; i < MESSAGE_DATA_SIZE; i ++) {
-      ar & data_[i];
+    ar & boost::serialization::make_array(data_, MESSAGE_DATA_SIZE);
+    try {
+      for (int i = MESSAGE_DATA_SIZE; i < MESSAGE_REAL_DATA_SIZE; i ++) {
+        ar & data_[i];
+      }
+    } catch(const std::exception& e) {
+      // Ignore the exceptions for message tail
     }
   }
 
@@ -55,7 +62,7 @@ class Message {
   short type_;
   long long create_time_;
   int data_size_;
-  unsigned char data_[MESSAGE_DATA_SIZE] = {0};
+  unsigned char data_[MESSAGE_REAL_DATA_SIZE] = {0};
   //std::vector<char> data_;
 
   DISALLOW_COPY_AND_ASSIGN(Message);

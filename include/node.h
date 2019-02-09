@@ -28,7 +28,6 @@ class Node : public std::enable_shared_from_this<Node> {
     boost::asio::ip::tcp::socket socket_;
     char socket_buffer[MESSAGE_SIZE_MAX];
   };
-  
   using shared_handler_t = std::shared_ptr<ConnectionHandler>;
 
  public:

@@ -4,10 +4,11 @@
 void Node::SendMessage(std::shared_ptr<Message> msg) {
   boost::asio::ip::tcp::resolver resolver(io_service_);
   boost::asio::ip::tcp::socket socket(io_service_);
+
   boost::asio::ip::tcp::resolver::iterator endpoint = 
     resolver.resolve(boost::asio::ip::tcp::resolver::query(LOCALHOST, std::to_string(msg->GetDstPort())));
   boost::asio::connect(socket, endpoint);
-
+  
   {
     std::ostringstream archive_stream;
     boost::archive::text_oarchive archive(archive_stream);
@@ -15,7 +16,7 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
     socket.send(boost::asio::buffer(archive_stream.str()));
   }
   //std::cout << "Send from " << port_ << " to " << msg->GetDstPort() << std::endl;
-  socket.close();
+  //socket.close();
 }
 
 void Node::RecvMessage(shared_handler_t handler,
@@ -69,21 +70,14 @@ void Node::Run() {
 void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error) { 
   std::shared_ptr<Message> msg = nullptr;
   try {
-      std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
-      std::istringstream archive_stream(archive_data);
-      boost::archive::text_iarchive archive(archive_stream);
-      archive >> msg;
+    std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
+    std::istringstream archive_stream(archive_data);
+    boost::archive::text_iarchive archive(archive_stream);
+    archive >> msg;
+    node->in_msg_.push(msg);
   }
   catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
-    for (int i = 0; i < MESSAGE_SIZE_MAX; ++i) {
-      std::cout << (int)socket_buffer[i];
-    }
-    std::cout << std::endl;
-    //return;
-    if (msg == nullptr) {
-      std::cout << "????" << std::endl;
-    }
+    std::cout << "Receive Message Error: " << e.what() << std::endl;
+    return;
   }
-  node->in_msg_.push(msg);
 }
