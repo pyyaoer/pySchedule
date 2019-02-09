@@ -40,11 +40,11 @@ void Node::Run() {
 
   // Threads for receiving messages
   for (int i = 0; i < THREAD_NUM; ++i) {
-    thread_pool_.emplace_back( [=]{ io_service_.run(); } );
+    thread_pool_.emplace_back( [this]{ io_service_.run(); } );
   }
 
   // Threads for handling messages in the in_msg_ queue
-  thread_pool_.emplace_back( [=]{
+  thread_pool_.emplace_back( [this]{
     // Waiting for all nodes to be alive
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while(true) {
@@ -53,7 +53,7 @@ void Node::Run() {
   });
 
   // Threads for sending messages in the out_msg_ queue
-  thread_pool_.emplace_back( [=]{
+  thread_pool_.emplace_back( [this]{
     // Waiting for all nodes to be alive
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while(true) {
