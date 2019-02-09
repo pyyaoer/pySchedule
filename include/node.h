@@ -15,18 +15,20 @@ class Node : public std::enable_shared_from_this<Node> {
   class ConnectionHandler : public std::enable_shared_from_this<ConnectionHandler> {
    public:
     explicit ConnectionHandler(boost::asio::io_service& service)
-     : io_service_(service), socket_(service) {}
+     : io_service_(service), socket_(service), bytes_read(0) {}
     boost::asio::ip::tcp::socket& GetSocket() { return socket_; }
     void DoRead(std::shared_ptr<Node> node) {
       socket_.async_read_some(boost::asio::buffer(socket_buffer, MESSAGE_SIZE_MAX),
-        boost::bind(&ConnectionHandler::HandleRead, shared_from_this(), node, boost::asio::placeholders::error));
+        boost::bind(&ConnectionHandler::HandleRead, shared_from_this(), node, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
     }
-    void HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error);
+    void HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error,
+                    std::size_t bytes_transferred);
   
    private:
     boost::asio::io_service& io_service_;
     boost::asio::ip::tcp::socket socket_;
     char socket_buffer[MESSAGE_SIZE_MAX];
+    std::size_t bytes_read;
   };
   using shared_handler_t = std::shared_ptr<ConnectionHandler>;
 

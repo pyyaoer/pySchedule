@@ -22,11 +22,11 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
 void Node::RecvMessage(shared_handler_t handler,
   boost::system::error_code const& error) {
 
-  if (error) return;
+  if (!error)
   // Push the new messagoutinto in_msg_ queue
-  handler->DoRead(shared_from_this());
+    handler->DoRead(shared_from_this());
   shared_handler_t new_handler = std::make_shared<ConnectionHandler>(io_service_);
-  acceptor_.async_accept(new_handler->GetSocket(), [=](boost::system::error_code e) { RecvMessage(new_handler, e); });
+  acceptor_.async_accept(new_handler->GetSocket(), [this, new_handler](const boost::system::error_code &e) { RecvMessage(new_handler, e); });
 }
 
 void Node::Run() {
@@ -36,15 +36,15 @@ void Node::Run() {
   acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
   acceptor_.bind(endpoint);
   acceptor_.listen(boost::asio::socket_base::max_connections);
-  acceptor_.async_accept(handler->GetSocket(), [=](boost::system::error_code e) { RecvMessage(handler, e); });
+  acceptor_.async_accept(handler->GetSocket(), [this, handler](const boost::system::error_code &e) { RecvMessage(handler, e); });
 
   // Threads for receiving messages
   for (int i = 0; i < THREAD_NUM; ++i) {
-    thread_pool_.emplace_back( [=]{ io_service_.run(); } );
+    thread_pool_.emplace_back( [this]{ io_service_.run(); } );
   }
 
   // Threads for handling messages in the in_msg_ queue
-  thread_pool_.emplace_back( [=]{
+  thread_pool_.emplace_back( [this]{
     // Waiting for all nodes to be alive
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while(true) {
@@ -53,7 +53,7 @@ void Node::Run() {
   });
 
   // Threads for sending messages in the out_msg_ queue
-  thread_pool_.emplace_back( [=]{
+  thread_pool_.emplace_back( [this]{
     // Waiting for all nodes to be alive
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while(true) {
@@ -67,9 +67,17 @@ void Node::Run() {
   }
 }
 
-void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error) { 
-  std::shared_ptr<Message> msg = nullptr;
+void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error,
+                                         std::size_t bytes_transferred) {
+  if (!error)
+  {
+    bytes_read += bytes_transferred;
+    socket_.async_read_some(boost::asio::buffer(socket_buffer, MESSAGE_SIZE_MAX) + bytes_read,
+        boost::bind(&ConnectionHandler::HandleRead, shared_from_this(), node, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+    return;
+  }
   try {
+    std::shared_ptr<Message> msg = nullptr;
     std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
     std::istringstream archive_stream(archive_data);
     boost::archive::text_iarchive archive(archive_stream);
