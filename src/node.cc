@@ -67,9 +67,17 @@ void Node::Run() {
   }
 }
 
-void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error) { 
-  std::shared_ptr<Message> msg = nullptr;
+void Node::ConnectionHandler::HandleRead(std::shared_ptr<Node> node, const boost::system::error_code& error,
+                                         std::size_t bytes_transferred) {
+  if (!error)
+  {
+    bytes_read += bytes_transferred;
+    socket_.async_read_some(boost::asio::buffer(socket_buffer, MESSAGE_SIZE_MAX) + bytes_read,
+        boost::bind(&ConnectionHandler::HandleRead, shared_from_this(), node, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+    return;
+  }
   try {
+    std::shared_ptr<Message> msg = nullptr;
     std::string archive_data(socket_buffer, MESSAGE_SIZE_MAX);
     std::istringstream archive_stream(archive_data);
     boost::archive::text_iarchive archive(archive_stream);
