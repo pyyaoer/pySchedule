@@ -3,7 +3,7 @@
 
 #include "include/lib_include.h"
 
-struct DDLSession : boost::enable_shared_from_this<DDLSession> {
+struct DDLSession : std::enable_shared_from_this<DDLSession> {
   explicit DDLSession(boost::asio::io_service& io_service, std::function<void()> handler, long long wait) :
     timer_(io_service, boost::posix_time::milliseconds(wait)), handler_(handler) {}
 
