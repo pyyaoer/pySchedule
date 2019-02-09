@@ -22,9 +22,9 @@ void Node::SendMessage(std::shared_ptr<Message> msg) {
 void Node::RecvMessage(shared_handler_t handler,
   boost::system::error_code const& error) {
 
-  if (error) return;
+  if (!error)
   // Push the new messagoutinto in_msg_ queue
-  handler->DoRead(shared_from_this());
+    handler->DoRead(shared_from_this());
   shared_handler_t new_handler = std::make_shared<ConnectionHandler>(io_service_);
   acceptor_.async_accept(new_handler->GetSocket(), [this, new_handler](const boost::system::error_code &e) { RecvMessage(new_handler, e); });
 }
