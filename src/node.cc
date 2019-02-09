@@ -26,7 +26,7 @@ void Node::RecvMessage(shared_handler_t handler,
   // Push the new messagoutinto in_msg_ queue
   handler->DoRead(shared_from_this());
   shared_handler_t new_handler = std::make_shared<ConnectionHandler>(io_service_);
-  acceptor_.async_accept(new_handler->GetSocket(), [=](boost::system::error_code e) { RecvMessage(new_handler, e); });
+  acceptor_.async_accept(new_handler->GetSocket(), [this, new_handler](boost::system::error_code e) { RecvMessage(new_handler, e); });
 }
 
 void Node::Run() {
@@ -36,7 +36,7 @@ void Node::Run() {
   acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
   acceptor_.bind(endpoint);
   acceptor_.listen(boost::asio::socket_base::max_connections);
-  acceptor_.async_accept(handler->GetSocket(), [=](boost::system::error_code e) { RecvMessage(handler, e); });
+  acceptor_.async_accept(handler->GetSocket(), [this, handler](boost::system::error_code e) { RecvMessage(handler, e); });
 
   // Threads for receiving messages
   for (int i = 0; i < THREAD_NUM; ++i) {
