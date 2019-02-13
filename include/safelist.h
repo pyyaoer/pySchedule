@@ -17,8 +17,8 @@ class SafeList {
   bool erase_match(RT &ret, std::function<bool(RT)> const& p) {
     std::unique_lock lock(mutex_);
     for (auto i = list_.begin(); i != list_.end(); i++) {
-      ret = std::move(**i);
-      if (p(ret)) {
+      if (p(**i)) {
+        ret = **i;
         list_.erase(i);
         return true;
       }
