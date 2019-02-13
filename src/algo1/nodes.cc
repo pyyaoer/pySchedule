@@ -141,7 +141,7 @@ void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
     out_msg_.push(new_msg_u);
     out_msg_.push(new_msg_p);
   };
-  boost::make_shared<DDLSession>(io_service_, handler, r->hardness)->start();
+  std::make_shared<DDLSession>(io_service_, handler, r->hardness)->start();
 }
 
 void Gate::Run() {
