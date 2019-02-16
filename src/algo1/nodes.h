@@ -18,7 +18,7 @@ class PNode : public Node {
 
  public:
   explicit PNode(int node_id, boost::asio::io_service& service, long long time_window)
-    : Node(node_id, service), time_window_(time_window) {
+    : Node(node_id, service), time_window_(time_window), new_incoming_msg_flag(false) {
     todo_list_ = std::make_shared<TodoList>();
     for (int i = 0; i < TENENT_NUM; ++i) {
       auto dq = std::make_shared<DoneQueue>();
@@ -40,11 +40,21 @@ class PNode : public Node {
   std::vector<std::shared_ptr<IdleQueue> > idle_list_;
   std::vector<std::shared_ptr<DoneQueue> > done_list_;
 
+  std::mutex cv_mtx;
+  std::condition_variable cv;
+  bool new_incoming_msg_flag;
+
   void HandleMessage(std::shared_ptr<Message> msg) {
     switch (msg->GetType()) {
       HandleMessageCase(Request, msg);
       HandleMessageCase(Complete, msg);
       HandleMessageDefault;
+    }
+    // notify the deamon thread
+    {
+      std::unique_lock<std::mutex> lck(cv_mtx);
+      new_incoming_msg_flag = true;
+      cv.notify_one();
     }
   }
   void HandleMessage_Request(std::shared_ptr<RequestMessage> msg);

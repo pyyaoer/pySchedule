@@ -39,12 +39,15 @@ void PNode::Run() {
       int r[TENENT_NUM] = {0};
       int l[TENENT_NUM] = {0};
       long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
+      long long sleep_time = INT64_MAX;
       for (int i = 0; i < TENENT_NUM; i++) {
         // Delete jobs from done_list_ which is out of the current window
         auto dl = done_list_[i];
         while(!dl->empty() and (now - dl->back() > time_window_)) {
           dl->pop();
         }
+        if (!dl->empty())
+          sleep_time = std::min(sleep_time, time_window_ - (now - dl->back()));
         // Count the number of done requests in the current window for each tenent
         // and compare it with reservation demand
         d[i] = dl->size();
@@ -99,6 +102,15 @@ void PNode::Run() {
           new_msg->SetData(a);
           out_msg_.push(new_msg);
         }
+      }
+      // Sleep
+      {
+        if (sleep_time == INT64_MAX) // nothing to do
+          sleep_time = 1000;
+        std::unique_lock<std::mutex> lck(cv_mtx);
+        if (!new_incoming_msg_flag)
+          cv.wait_for(lck, std::chrono::milliseconds(sleep_time));
+        new_incoming_msg_flag = false;
       }
     }
   });
