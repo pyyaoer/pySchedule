@@ -22,7 +22,8 @@ include_HEADERS = include/lib_include.h \
 
 bin_PROGRAMS = bin/test_1to1 \
                 bin/test_nto1 \
-                bin/algo1
+                bin/algo1 \
+                bin/algo2
 
 bin_test_1to1_SOURCES = src/node.cc \
                          src/message.cc \
@@ -38,3 +39,7 @@ bin_algo1_SOURCES = src/node.cc \
                      src/message.cc \
                      src/algo1/nodes.cc \
                      src/algo1/main.cc
+
+bin_algo2_SOURCES = src/node.cc \
+                     src/algo2/nodes.cc \
+                     src/algo2/main.cc
