@@ -1,10 +1,18 @@
 #ifndef PYSCHEDULE_MACROS_H_
 #define PYSCHEDULE_MACROS_H_
 
-#define PNODE_NUM 1
-#define GATE_NUM 1
-#define USER_NUM 16
-#define TENENT_NUM 3
+extern int PNODE_NUM_;
+extern int GATE_NUM_;
+extern int USER_NUM_;
+extern int TENENT_NUM_;
+extern int THREADS_PER_GATE_;
+extern int TENENT_LIMIT_;
+extern int TENENT_RESERVATION_;
+
+#define PNODE_NUM PNODE_NUM_
+#define GATE_NUM GATE_NUM_
+#define USER_NUM USER_NUM_
+#define TENENT_NUM TENENT_NUM_
 
 #define PNODE_ID_START ID_BASE
 #define PNODE_ID_END (PNODE_ID_START + PNODE_NUM)
@@ -18,9 +26,9 @@
 #define UID2NID(uid) (gid + USER_ID_START)
 #define NID2UID(nid) (uid - USER_ID_START)
 
-#define THREADS_PER_GATE 10
-#define TENENT_LIMIT 100
-#define TENENT_RESERVATION 50
+#define THREADS_PER_GATE THREADS_PER_GATE_
+#define TENENT_LIMIT TENENT_LIMIT_
+#define TENENT_RESERVATION TENENT_RESERVATION_
 
 #endif //PYSCHEDULE_MACROS_H_
 

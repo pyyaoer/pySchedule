@@ -2,8 +2,38 @@
 #include <ctime>
 
 #include "nodes.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
-int main(void) {
+int PNODE_NUM_ = 1;
+int GATE_NUM_ = 1;
+int USER_NUM_ = 16;
+int TENENT_NUM_ = 3;
+int THREADS_PER_GATE_ = 500;
+int TENENT_LIMIT_ = 100;
+int TENENT_RESERVATION_ = 50;
+
+int main(int argc, char **argv) {
+
+  if (argc == 2)
+  {
+    std::ifstream in(argv[1]);
+    boost::property_tree::ptree ptree;
+    boost::property_tree::read_json(in, ptree);
+    PNODE_NUM_ = ptree.get<int>("PNODE_NUM");
+    GATE_NUM_ = ptree.get<int>("GATE_NUM");
+    USER_NUM_ = ptree.get<int>("USER_NUM");
+    TENENT_NUM_ = ptree.get<int>("TENENT_NUM");
+    THREADS_PER_GATE_ = ptree.get<int>("THREADS_PER_GATE");
+    TENENT_LIMIT_ = ptree.get<int>("TENENT_LIMIT");
+    TENENT_RESERVATION_ = ptree.get<int>("TENENT_RESERVATION");
+  }
+  else if (argc != 1)
+  {
+    std::cerr << "Bad argument!" << std::endl;
+    return -1;
+  }
+
   boost::asio::io_service io_service;
   std::vector<std::shared_ptr<boost::thread>> thread_pool;
 
