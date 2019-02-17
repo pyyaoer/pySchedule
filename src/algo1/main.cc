@@ -8,10 +8,10 @@
 int PNODE_NUM_ = 1;
 int GATE_NUM_ = 1;
 int USER_NUM_ = 16;
-int TENENT_NUM_ = 3;
+int TENANT_NUM_ = 3;
 int THREADS_PER_GATE_ = 500;
-int TENENT_LIMIT_ = 100;
-int TENENT_RESERVATION_ = 50;
+int TENANT_LIMIT_ = 100;
+int TENANT_RESERVATION_ = 50;
 
 int main(int argc, char **argv) {
 
@@ -23,10 +23,10 @@ int main(int argc, char **argv) {
     PNODE_NUM_ = ptree.get<int>("PNODE_NUM");
     GATE_NUM_ = ptree.get<int>("GATE_NUM");
     USER_NUM_ = ptree.get<int>("USER_NUM");
-    TENENT_NUM_ = ptree.get<int>("TENENT_NUM");
+    TENANT_NUM_ = ptree.get<int>("TENANT_NUM");
     THREADS_PER_GATE_ = ptree.get<int>("THREADS_PER_GATE");
-    TENENT_LIMIT_ = ptree.get<int>("TENENT_LIMIT");
-    TENENT_RESERVATION_ = ptree.get<int>("TENENT_RESERVATION");
+    TENANT_LIMIT_ = ptree.get<int>("TENANT_LIMIT");
+    TENANT_RESERVATION_ = ptree.get<int>("TENANT_RESERVATION");
   }
   else if (argc != 1)
   {
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     thread_pool.push_back(std::make_shared<boost::thread>(boost::bind(&Gate::Run, gate)));
   }
   for (int i = USER_ID_START; i < USER_ID_END; ++i) {
-    auto user = std::make_shared<User>(i % TENENT_NUM, i, io_service);
+    auto user = std::make_shared<User>(i % TENANT_NUM, i, io_service);
     thread_pool.push_back(std::make_shared<boost::thread>(boost::bind(&User::Run, user)));
   }
 

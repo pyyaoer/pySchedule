@@ -9,7 +9,7 @@ class PNode : public Node {
 
   typedef struct {
     int gate;
-    int tenent;
+    int tenant;
     long long time;
   } TodoItem;
   using TodoList = SafeList<std::shared_ptr<TodoItem> >;
@@ -20,7 +20,7 @@ class PNode : public Node {
   explicit PNode(int node_id, boost::asio::io_service& service, long long time_window)
     : Node(node_id, service), time_window_(time_window), new_incoming_msg_flag(false) {
     todo_list_ = std::make_shared<TodoList>();
-    for (int i = 0; i < TENENT_NUM; ++i) {
+    for (int i = 0; i < TENANT_NUM; ++i) {
       auto dq = std::make_shared<DoneQueue>();
       done_list_.push_back(dq);
     }
@@ -70,7 +70,7 @@ class Gate : public Node {
  public:
   explicit Gate(int node_id, boost::asio::io_service& service)
     : Node(node_id, service) {
-    for (int i = 0; i < TENENT_NUM; ++i) {
+    for (int i = 0; i < TENANT_NUM; ++i) {
       auto rq = std::make_shared<RequestQueue>();
       requests_.push_back(rq);
     }
@@ -95,8 +95,8 @@ class Gate : public Node {
 
 class User : public Node {
  public:
-  explicit User(int tenent_id, int node_id, boost::asio::io_service& service)
-    : Node(node_id, service), tenent_id_(tenent_id), latency_summary_(0), counter_(0) {}
+  explicit User(int tenant_id, int node_id, boost::asio::io_service& service)
+    : Node(node_id, service), tenant_id_(tenant_id), latency_summary_(0), counter_(0) {}
   // A function should be defined here for statistics
   void GetStatistics();
   void Run();
@@ -110,7 +110,7 @@ class User : public Node {
   }
   void HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg);
 
-  int tenent_id_;
+  int tenant_id_;
 
   long long latency_summary_;
   long long maximum_latency_;

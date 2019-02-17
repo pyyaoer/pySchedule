@@ -2,8 +2,8 @@
     "PNODE_NUM" : 1,
     "GATE_NUM" : 1,
     "USER_NUM" : 16,
-    "TENENT_NUM" : 3,
+    "TENANT_NUM" : 3,
     "THREADS_PER_GATE" : 500,
-    "TENENT_LIMIT" : 100,
-    "TENENT_RESERVATION" : 50
+    "TENANT_LIMIT" : 100,
+    "TENANT_RESERVATION" : 50
 }

@@ -14,7 +14,7 @@ void PNode::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   auto item = std::make_shared<TodoItem>(
     TodoItem {
       .gate = r.gate,
-      .tenent = r.tenent,
+      .tenant = r.tenant,
       .time = msg->GetCreateTime(),
     }
   );
@@ -30,17 +30,17 @@ void PNode::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
 
 void PNode::Run() {
   thread_pool_.emplace_back( [=]{
-    int d[TENENT_NUM] = {0};
+    int d[TENANT_NUM] = {0};
     // Try to do the scheduling
     while (true) {
-      // Tenents that are under reservation
+      // Tenants that are under reservation
       bool r_schedule = false;
       bool l_schedule = false;
-      int r[TENENT_NUM] = {0};
-      int l[TENENT_NUM] = {0};
+      int r[TENANT_NUM] = {0};
+      int l[TENANT_NUM] = {0};
       long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
       long long sleep_time = INT64_MAX;
-      for (int i = 0; i < TENENT_NUM; i++) {
+      for (int i = 0; i < TENANT_NUM; i++) {
         // Delete jobs from done_list_ which is out of the current window
         auto dl = done_list_[i];
         while(!dl->empty() and (now - dl->back() > time_window_)) {
@@ -48,11 +48,11 @@ void PNode::Run() {
         }
         if (!dl->empty())
           sleep_time = std::min(sleep_time, time_window_ - (now - dl->back()));
-        // Count the number of done requests in the current window for each tenent
+        // Count the number of done requests in the current window for each tenant
         // and compare it with reservation demand
         d[i] = dl->size();
-        r[i] = TENENT_RESERVATION * time_window_ / 1000 - d[i];
-        l[i] = TENENT_LIMIT * time_window_ / 1000 - d[i];
+        r[i] = TENANT_RESERVATION * time_window_ / 1000 - d[i];
+        l[i] = TENANT_LIMIT * time_window_ / 1000 - d[i];
         r_schedule = r_schedule or (r[i] > 0);
         l_schedule = l_schedule or (l[i] > 0);
       }
@@ -68,17 +68,17 @@ void PNode::Run() {
        // Some tenants haven't met their reservation during last window
        // Make them happy first
         std::function<bool(TodoItem)> lambda_r =
-          [r, g](TodoItem ti)->bool {
-            return r[ti.tenent] > 0 and g[ti.gate] > 0;
+          [&r, &g](TodoItem ti)->bool {
+            return r[ti.tenant] > 0 and g[ti.gate] > 0;
           };
         while (todo_list_->erase_match(t, lambda_r)) {
-          r[t.tenent] --;
-          l[t.tenent] --;
+          r[t.tenant] --;
+          l[t.tenant] --;
           g[t.gate] --;
           idle_list_[t.gate]->pop();
-          done_list_[t.tenent]->push(now);
+          done_list_[t.tenant]->push(now);
           ActiveData a = {
-            .tenent = t.tenent,
+            .tenant = t.tenant,
           };
           std::shared_ptr<Message> new_msg = std::make_shared<ActiveMessage>(port_, GET_PORT(GID2NID(t.gate)));
           new_msg->SetData(a);
@@ -87,16 +87,16 @@ void PNode::Run() {
         // After trying to meet the reservation demand,
         // schedule some requests before reaching limit
         std::function<bool(TodoItem)> lambda_l =
-          [l, g](TodoItem ti)->bool {
-            return l[ti.tenent] > 0 and g[ti.gate] > 0;
+          [&l, &g](TodoItem ti)->bool {
+            return l[ti.tenant] > 0 and g[ti.gate] > 0;
           };
         while (todo_list_->erase_match(t, lambda_l)) {
-          l[t.tenent] --;
+          l[t.tenant] --;
           g[t.gate] --;
           idle_list_[t.gate]->pop();
-          done_list_[t.tenent]->push(now);
+          done_list_[t.tenant]->push(now);
           ActiveData a = {
-            .tenent = t.tenent,
+            .tenant = t.tenant,
           };
           std::shared_ptr<Message> new_msg = std::make_shared<ActiveMessage>(port_, GET_PORT(GID2NID(t.gate)));
           new_msg->SetData(a);
@@ -120,10 +120,10 @@ void PNode::Run() {
 
 void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   //std::cout << "Gate::HandleMessage_Request" << std::endl;
-  // Push the new request from User(tenent t) to the requests_[t] queue
+  // Push the new request from User(tenant t) to the requests_[t] queue
   auto r = std::make_shared<RequestData>();
   msg->GetData(*r);
-  requests_[r->tenent]->push(r);
+  requests_[r->tenant]->push(r);
   // Send a RequestMessage to PNode
   std::shared_ptr<Message> new_msg = std::make_shared<RequestMessage>(port_, GET_PORT(PNODE_ID_START));
   new_msg->SetData(*r);
@@ -132,10 +132,10 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
  
 void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
   //std::cout << "Gate::HandleMessage_Active" << std::endl;
-  // Handle the first request belongs to tenent a.tenent
+  // Handle the first request belongs to tenant a.tenant
   ActiveData a;
   msg->GetData(a);
-  auto r = requests_[a.tenent]->pop();
+  auto r = requests_[a.tenant]->pop();
 
   auto self(shared_from_this());
   auto handler = [&, r, self]() {
@@ -144,7 +144,7 @@ void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
     std::shared_ptr<Message> new_msg_p = std::make_shared<CompleteMessage>(port_, GET_PORT(PNODE_ID_START));
     CompleteData c = {
       .id = r->id,
-      .tenent = r->tenent,
+      .tenant = r->tenant,
       .gate = NID2GID(node_id_),
       .status = 1,
     };
@@ -197,7 +197,7 @@ void User::Run() {
       RequestData r = {
         .id = msg_id_,
         .user = node_id_,
-        .tenent = tenent_id_,
+        .tenant = tenant_id_,
         .gate = NID2GID(gate_node_id),
         .hardness = hardness_val,
       };
