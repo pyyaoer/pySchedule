@@ -148,7 +148,7 @@ void Gate::Run() {
 	std::function<bool(TodoItem&)> lambda_update =
           [t](TodoItem& ti)->bool {
 	    if (ti.data.tenant == t.data.tenant) {
-	      ti.r_tag -= 1 / TENANT_RESERVATION;
+	      ti.r_tag -= (double) 1 / TENANT_RESERVATION;
 	    }
             return false;
           };
