@@ -29,20 +29,17 @@ void PNode::HandleMessage_Scheduled(std::shared_ptr<ScheduledMessage> msg) {
   msg->GetData(s);
   // Update the rho records if the request was treated as a constraint-based one
   if (s.method == 0) {
+    // Update the records of the other gates
+    for (int i = 0; i < GATE_NUM; ++i)
+      rho_[i][s.tenant] ++;
+
     // Reset the record of the current gate
     rho_[s.gate][s.tenant] = 1;
-    // Update the records of the other gates
-    for (int i = 0; i < GATE_NUM; ++i) {
-      if (i == s.gate) continue;
-      rho_[i][s.tenant] ++;
-    }
   }
   // Update the delta records
-  delta_[s.gate][s.tenant] = 1;
-  for (int i = 0; i < GATE_NUM; ++i) {
-    if (i == s.gate) continue;
+  for (int i = 0; i < GATE_NUM; ++i)
     delta_[i][s.tenant] ++;
-  }
+  delta_[s.gate][s.tenant] = 1;
 }
 
 void PNode::Run() {
@@ -75,8 +72,8 @@ void Gate::HandleMessage_Tag(std::shared_ptr<TagMessage> msg) {
   requests_->erase_match(r, lambda_match);
   long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
   double dnow = now % CLOCK_REMAINDER;
-  rtag_[r.tenant] = std::max(rtag_[r.tenant] + t.rho / TENANT_RESERVATION, dnow);
-  ltag_[r.tenant] = std::max(ltag_[r.tenant] + t.delta / TENANT_LIMIT, dnow);
+  rtag_[r.tenant] = std::max(rtag_[r.tenant] + (double) t.rho / TENANT_RESERVATION, dnow);
+  ltag_[r.tenant] = std::max(ltag_[r.tenant] + (double) t.delta / TENANT_LIMIT, dnow);
   if (ptag_[r.tenant] == 0) {
     long long mn = LLONG_MAX;
     for(auto p : ptag_) {
