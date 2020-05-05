@@ -20,7 +20,7 @@ void PNode::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
     .request_gid = r.request_gid,
   };
   new_msg->SetData(t);
-  out_msg_.push(new_msg);
+  SendMessage(new_msg);
 }
 
 void PNode::HandleMessage_Scheduled(std::shared_ptr<ScheduledMessage> msg) {
@@ -56,7 +56,7 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   // Send a RequestMessage to PNode
   std::shared_ptr<Message> new_msg = std::make_shared<RequestMessage>(port_, GET_PORT(PNODE_ID_START));
   new_msg->SetData(*r);
-  out_msg_.push(new_msg);
+  SendMessage(new_msg);
 }
  
 void Gate::HandleMessage_Tag(std::shared_ptr<TagMessage> msg) {
@@ -180,8 +180,8 @@ void Gate::Run() {
       new_msg_p->SetData(s);
       auto handler = [&, new_msg_u, new_msg_p, self]() {
         // Respond to User with a CompleteMessage
-        out_msg_.push(new_msg_u);
-        out_msg_.push(new_msg_p);
+	SendMessage(new_msg_u);
+	SendMessage(new_msg_p);
         idle_slots_->push(true);
       };
       std::make_shared<DDLSession>(io_service_, handler, rd.hardness)->start();
@@ -232,7 +232,7 @@ void User::Run() {
         .hardness = hardness_val,
       };
       msg->SetData(r);
-      out_msg_.push(msg);
+      SendMessage(msg);
       req_send_time_.insert(msg_id_, msg->GetCreateTime());
       msg_id_ ++;
     }

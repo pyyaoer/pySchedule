@@ -82,7 +82,7 @@ void PNode::Run() {
           };
           std::shared_ptr<Message> new_msg = std::make_shared<ActiveMessage>(port_, GET_PORT(GID2NID(t.gate)));
           new_msg->SetData(a);
-          out_msg_.push(new_msg);
+	  SendMessage(new_msg);
         }
         // After trying to meet the reservation demand,
         // schedule some requests before reaching limit
@@ -100,7 +100,7 @@ void PNode::Run() {
           };
           std::shared_ptr<Message> new_msg = std::make_shared<ActiveMessage>(port_, GET_PORT(GID2NID(t.gate)));
           new_msg->SetData(a);
-          out_msg_.push(new_msg);
+	  SendMessage(new_msg);
         }
       }
       // Sleep
@@ -127,7 +127,7 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   // Send a RequestMessage to PNode
   std::shared_ptr<Message> new_msg = std::make_shared<RequestMessage>(port_, GET_PORT(PNODE_ID_START));
   new_msg->SetData(*r);
-  out_msg_.push(new_msg);
+  SendMessage(new_msg);
 }
  
 void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
@@ -150,8 +150,8 @@ void Gate::HandleMessage_Active(std::shared_ptr<ActiveMessage> msg) {
     };
     new_msg_u->SetData(c);
     new_msg_p->SetData(c);
-    out_msg_.push(new_msg_u);
-    out_msg_.push(new_msg_p);
+    SendMessage(new_msg_u);
+    SendMessage(new_msg_p);
   };
   std::make_shared<DDLSession>(io_service_, handler, r->hardness)->start();
 }
@@ -202,7 +202,7 @@ void User::Run() {
         .hardness = hardness_val,
       };
       msg->SetData(r);
-      out_msg_.push(msg);
+      SendMessage(msg);
       req_send_time_.insert(msg_id_, msg->GetCreateTime());
       msg_id_ ++;
     }

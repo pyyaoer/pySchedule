@@ -48,12 +48,16 @@ class Node : public std::enable_shared_from_this<Node> {
   SafeQueue<std::shared_ptr<Message> > in_msg_;
   SafeQueue<std::shared_ptr<Message> > out_msg_;
 
+  inline void SendMessage(std::shared_ptr<Message> msg) {
+    out_msg_.push(msg);
+  };
+
  private:
   // Recv -> Read -> Handle -> Send
   void RecvMessage(shared_handler_t handler,
     boost::system::error_code const& error);
   virtual void HandleMessage(std::shared_ptr<Message> msg) = 0;
-  void SendMessage(std::shared_ptr<Message> msg);
+  void SendMessageInternal(std::shared_ptr<Message> msg);
 
   boost::asio::ip::tcp::acceptor acceptor_;
 

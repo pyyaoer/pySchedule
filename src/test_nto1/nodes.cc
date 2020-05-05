@@ -16,7 +16,7 @@ void Client::HandleMessage(std::shared_ptr<Message> msg) {
   new_msg->SetData(d);
   std::cout << "Send message" << std::endl;
   new_msg->PrintMessage();
-  out_msg_.push(new_msg);
+  SendMessage(new_msg);
 }
 
 void Server::HandleMessage(std::shared_ptr<Message> msg) {
@@ -33,6 +33,6 @@ void Server::HandleMessage(std::shared_ptr<Message> msg) {
   new_msg->SetData(d);
   std::cout << "Send message" << std::endl;
   new_msg->PrintMessage();
-  out_msg_.push(new_msg);
+  SendMessage(new_msg);
 }
 

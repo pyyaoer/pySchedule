@@ -1,7 +1,7 @@
 #include <string.h>
 #include "include/node.h"
 
-void Node::SendMessage(std::shared_ptr<Message> msg) {
+void Node::SendMessageInternal(std::shared_ptr<Message> msg) {
   boost::asio::ip::tcp::resolver resolver(io_service_);
   boost::asio::ip::tcp::socket socket(io_service_);
 
@@ -57,7 +57,7 @@ void Node::Run() {
     // Waiting for all nodes to be alive
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while(true) {
-      SendMessage(out_msg_.pop());
+      SendMessageInternal(out_msg_.pop());
     }
   });
 
