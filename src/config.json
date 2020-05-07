@@ -1,0 +1,11 @@
+{
+    "PNODE_NUM" : 1,
+    "GATE_NUM" : 8,
+    "USER_NUM" : 12,
+    "TENANT_NUM" : 4,
+    "THREADS_PER_GATE" : 2,
+    "TENANT_LIMIT" : 150,
+    "TENANT_RESERVATION" : 90,
+    "BENCHMARK_SHAPE": 0,
+    "MSG_LATENCY": 30
+}

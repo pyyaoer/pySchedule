@@ -33,8 +33,8 @@ class Node : public std::enable_shared_from_this<Node> {
   using shared_handler_t = std::shared_ptr<ConnectionHandler>;
 
  public:
-  explicit Node(int node_id, boost::asio::io_service& service)
-   : io_service_(service), acceptor_(service),
+  explicit Node(int node_id, int msg_latency, boost::asio::io_service& service)
+   : io_service_(service), msg_latency_(msg_latency), acceptor_(service),
      node_id_(node_id), port_(GET_PORT(node_id)) {}
   ~Node() {};
 
@@ -42,6 +42,7 @@ class Node : public std::enable_shared_from_this<Node> {
 
  protected:
   int node_id_;
+  int msg_latency_;
   short port_;
   boost::asio::io_service& io_service_;
   std::vector<std::thread> thread_pool_;
@@ -56,6 +57,7 @@ class Node : public std::enable_shared_from_this<Node> {
   // Recv -> Read -> Handle -> Send
   void RecvMessage(shared_handler_t handler,
     boost::system::error_code const& error);
+  void HandleMessageInternal(const boost::system::error_code &e, std::shared_ptr<Message> msg);
   virtual void HandleMessage(std::shared_ptr<Message> msg) = 0;
   void SendMessageInternal(std::shared_ptr<Message> msg);
 

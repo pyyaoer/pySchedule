@@ -2,14 +2,15 @@
 #define PYSCHEDULE_ALGO2_NODES_H_
 
 #include "include/node.h"
+#include "include/benchmark.h"
 #include "messages.h"
 #include "macros.h"
 
 class PNode : public Node {
 
  public:
-  explicit PNode(int node_id, boost::asio::io_service& service)
-    : Node(node_id, service) {
+  explicit PNode(int node_id, int msg_latency, boost::asio::io_service& service)
+    : Node(node_id, msg_latency, service) {
     for (int i = 0; i < GATE_NUM; ++i) {
       rho_.push_back(std::vector<int>(TENANT_NUM, 1));
       delta_.push_back(std::vector<int>(TENANT_NUM, 1));
@@ -47,8 +48,8 @@ class Gate : public Node {
   using IdleQueue = SafeQueue<bool>;
 
  public:
-  explicit Gate(int node_id, boost::asio::io_service& service)
-    : Node(node_id, service), request_id_(0), tag_mutex_(),
+  explicit Gate(int node_id, int msg_latency, boost::asio::io_service& service)
+    : Node(node_id, msg_latency, service), request_id_(0), tag_mutex_(),
     rtag_(TENANT_NUM, 0), ltag_(TENANT_NUM, 0), ptag_(TENANT_NUM, 0) {
     todo_list_ = std::make_shared<TodoList>();
     requests_ = std::make_shared<RequestList>();
@@ -84,8 +85,10 @@ class Gate : public Node {
 
 class User : public Node {
  public:
-  explicit User(int tenant_id, int node_id, boost::asio::io_service& service)
-    : Node(node_id, service), tenant_id_(tenant_id), latency_summary_(0), counter_(0) {}
+  explicit User(int tenant_id, int node_id, int msg_latency, boost::asio::io_service& service,
+      int shape, double arg1, double arg2)
+    : Node(node_id, msg_latency, service), tenant_id_(tenant_id), latency_summary_(0),
+    counter_(0), bcmk_(shape, arg1, arg2) {}
   void Run();
 
  private:
@@ -104,6 +107,8 @@ class User : public Node {
   int counter_;
   int msg_id_;
   SafeMap<int, long long> req_send_time_;
+
+  Benchmark bcmk_;
 
   DISALLOW_COPY_AND_ASSIGN(User);
 };

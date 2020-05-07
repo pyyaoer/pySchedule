@@ -8,6 +8,7 @@ extern int TENANT_NUM_;
 extern int THREADS_PER_GATE_;
 extern int TENANT_LIMIT_;
 extern int TENANT_RESERVATION_;
+extern int BENCHMARK_SHAPE_;
 
 #define PNODE_NUM PNODE_NUM_
 #define GATE_NUM GATE_NUM_

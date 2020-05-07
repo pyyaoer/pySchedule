@@ -29,6 +29,10 @@ void Node::RecvMessage(shared_handler_t handler,
   acceptor_.async_accept(new_handler->GetSocket(), [this, new_handler](const boost::system::error_code &e) { RecvMessage(new_handler, e); });
 }
 
+void Node::HandleMessageInternal(const boost::system::error_code& e, std::shared_ptr<Message> msg) {
+  HandleMessage(msg);
+}
+
 void Node::Run() {
   auto handler = std::make_shared<ConnectionHandler>(io_service_);
   boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port_);
@@ -48,7 +52,10 @@ void Node::Run() {
     // Waiting for all nodes to be alive
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while(true) {
-      HandleMessage(in_msg_.pop());
+      boost::asio::deadline_timer t(io_service_, boost::posix_time::milliseconds(msg_latency_));
+      t.async_wait(boost::bind(&Node::HandleMessageInternal, this,
+	            boost::asio::placeholders::error, in_msg_.pop()));
+      //HandleMessage(in_msg_.pop());
     }
   });
 
