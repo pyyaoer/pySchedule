@@ -2,6 +2,7 @@
 #define PYSCHEDULE_ALGO1_NODES_H_
 
 #include "include/node.h"
+#include "include/benchmark.h"
 #include "messages.h"
 #include "macros.h"
 
@@ -17,8 +18,8 @@ class PNode : public Node {
   using IdleQueue = SafeQueue<bool>;
 
  public:
-  explicit PNode(int node_id, boost::asio::io_service& service, long long time_window)
-    : Node(node_id, service), time_window_(time_window), new_incoming_msg_flag(false) {
+  explicit PNode(int node_id, int msg_latency, boost::asio::io_service& service, long long time_window)
+    : Node(node_id, msg_latency, service), time_window_(time_window), new_incoming_msg_flag(false) {
     todo_list_ = std::make_shared<TodoList>();
     for (int i = 0; i < TENANT_NUM; ++i) {
       auto dq = std::make_shared<DoneQueue>();
@@ -68,8 +69,8 @@ class Gate : public Node {
   using RequestQueue = SafeQueue<std::shared_ptr<RequestData> >;
 
  public:
-  explicit Gate(int node_id, boost::asio::io_service& service)
-    : Node(node_id, service) {
+  explicit Gate(int node_id, int msg_latency, boost::asio::io_service& service)
+    : Node(node_id, msg_latency, service) {
     for (int i = 0; i < TENANT_NUM; ++i) {
       auto rq = std::make_shared<RequestQueue>();
       requests_.push_back(rq);
@@ -95,8 +96,10 @@ class Gate : public Node {
 
 class User : public Node {
  public:
-  explicit User(int tenant_id, int node_id, boost::asio::io_service& service)
-    : Node(node_id, service), tenant_id_(tenant_id), latency_summary_(0), counter_(0) {}
+  explicit User(int tenant_id, int node_id, int msg_latency, boost::asio::io_service& service,
+      int shape, double arg1, double arg2)
+    : Node(node_id, msg_latency, service), tenant_id_(tenant_id), latency_summary_(0),
+    counter_(0), bcmk_(shape, arg1, arg2) {}
   // A function should be defined here for statistics
   void GetStatistics();
   void Run();
@@ -117,6 +120,8 @@ class User : public Node {
   int counter_;
   int msg_id_;
   SafeMap<int, long long> req_send_time_;
+
+  Benchmark bcmk_;
 
   DISALLOW_COPY_AND_ASSIGN(User);
 };
