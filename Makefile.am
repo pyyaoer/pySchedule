@@ -21,31 +21,29 @@ include_HEADERS = include/lib_include.h \
                    include/safelist.h \
                    include/benchmark.h
 
-bin_PROGRAMS = bin/zero \
-	        bin/base
 
-# bin_PROGRAMS = bin/test_1to1 \
-#                bin/test_nto1 \
-#                bin/zero \
-#                bin/algo2
+bin_PROGRAMS = bin/test_1to1 \
+                bin/test_nto1 \
+                bin/zero \
+                bin/base
 
-#bin_test_1to1_SOURCES = src/node.cc \
-#                         src/message.cc \
-#                         src/test_1to1/nodes.cc \
-#                         src/test_1to1/main.cc
-#
-#bin_test_nto1_SOURCES = src/node.cc \
-#                         src/message.cc \
-#                         src/test_nto1/nodes.cc \
-#                         src/test_nto1/main.cc
-#
+bin_test_1to1_SOURCES = src/node.cc \
+                         src/message.cc \
+                         test/test_1to1/nodes.cc \
+                         test/test_1to1/main.cc
+
+bin_test_nto1_SOURCES = src/node.cc \
+                         src/message.cc \
+                         test/test_nto1/nodes.cc \
+                         test/test_nto1/main.cc
+
 bin_zero_SOURCES = src/node.cc \
-	            src/benchmark.cc \
+                    src/benchmark.cc \
                     src/message.cc \
-                    src/algo-zero/nodes.cc \
-                    src/algo-zero/main.cc
+                    src/algo/zero/nodes.cc \
+                    src/algo/zero/main.cc
 
 bin_base_SOURCES = src/node.cc \
-		    src/benchmark.cc \
-                    src/algo-base/nodes.cc \
-                    src/algo-base/main.cc
+                    src/benchmark.cc \
+                    src/algo/base/nodes.cc \
+                    src/algo/base/main.cc

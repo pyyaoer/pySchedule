@@ -53,6 +53,7 @@ class Node : public std::enable_shared_from_this<Node> {
   };
 
  public:
+  explicit Node(int node_id, boost::asio::io_service& service): Node(node_id, 0, service) {}
   explicit Node(int node_id, int msg_latency, boost::asio::io_service& service)
    : io_service_(service), msg_latency_(msg_latency), acceptor_(service),
      node_id_(node_id), port_(GET_PORT(node_id)) {}
