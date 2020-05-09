@@ -1,5 +1,5 @@
-#ifndef PYSCHEDULE_ALGO1_MESSAGES_H_
-#define PYSCHEDULE_ALGO1_MESSAGES_H_
+#ifndef PYSCHEDULE_ALGO_ZERO_MESSAGES_H_
+#define PYSCHEDULE_ALGO_ZERO_MESSAGES_H_
 
 #include "include/message.h"
 
@@ -46,4 +46,4 @@ class ActiveMessage : public Message {
 };
 
 
-#endif // PYSCHEDULE_ALGO1_MESSAGES_H_
+#endif // PYSCHEDULE_ALGO_ZERO_MESSAGES_H_

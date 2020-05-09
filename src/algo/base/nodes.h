@@ -1,5 +1,5 @@
-#ifndef PYSCHEDULE_ALGO2_NODES_H_
-#define PYSCHEDULE_ALGO2_NODES_H_
+#ifndef PYSCHEDULE_ALGO_BASE_NODES_H_
+#define PYSCHEDULE_ALGO_BASE_NODES_H_
 
 #include "include/node.h"
 #include "include/benchmark.h"
@@ -113,5 +113,5 @@ class User : public Node {
   DISALLOW_COPY_AND_ASSIGN(User);
 };
 
-#endif // PYSCHEDULE_ALGO2_NODES_H_
+#endif // PYSCHEDULE_ALGO_BASE_NODES_H_
 

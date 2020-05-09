@@ -1,5 +1,5 @@
-#ifndef PYSCHEDULE_ALGO2_MESSAGES_H_
-#define PYSCHEDULE_ALGO2_MESSAGES_H_
+#ifndef PYSCHEDULE_ALGO_BASE_MESSAGES_H_
+#define PYSCHEDULE_ALGO_BASE_MESSAGES_H_
 
 #include "include/message.h"
 
@@ -62,5 +62,5 @@ class CompleteMessage : public Message {
 };
 
 
-#endif // PYSCHEDULE_ALGO2_MESSAGES_H_
+#endif // PYSCHEDULE_ALGO_BASE_MESSAGES_H_
 
