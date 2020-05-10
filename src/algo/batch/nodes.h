@@ -73,7 +73,8 @@ class Gate : public Node {
  public:
   explicit Gate(int node_id, int msg_latency, int period, boost::asio::io_service& service)
     : Node(node_id, msg_latency, service), period_(period), request_id_(0), parameter_mutex_(),
-    rtag_(TENANT_NUM, 0), ltag_(TENANT_NUM, 0), ptag_(TENANT_NUM, 0) {
+    rtag_(TENANT_NUM, 0), ltag_(TENANT_NUM, 0), ptag_(TENANT_NUM, 0),
+    rho_(TENANT_NUM, 0), delta_(TENANT_NUM, 0) {
     todo_list_ = std::make_shared<TodoList>();
     idle_slots_ = std::make_shared<IdleQueue>();
     for (int i = 0; i < THREADS_PER_GATE; i++) {

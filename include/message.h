@@ -4,7 +4,7 @@
 #include "include/lib_include.h"
 
 #define MESSAGE_ROBUST_TAIL 2
-#define MESSAGE_DATA_SIZE 50
+#define MESSAGE_DATA_SIZE 60
 #define MESSAGE_REAL_DATA_SIZE (MESSAGE_DATA_SIZE + MESSAGE_ROBUST_TAIL)
 
 class Message {

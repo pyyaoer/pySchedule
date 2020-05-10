@@ -44,7 +44,8 @@ class CompleteMessage : public Message {
 typedef struct {
   int gate;
   int period;
-  int num[MAX_TENANT][2];
+  int rnum[MAX_TENANT];
+  int dnum[MAX_TENANT];
 } SyncData;
 
 class SyncMessage : public Message {

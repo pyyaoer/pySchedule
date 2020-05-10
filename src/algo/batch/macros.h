@@ -1,7 +1,7 @@
 #ifndef PYSCHEDULE_ALGO_BATCH_MACROS_H_
 #define PYSCHEDULE_ALGO_BATCH_MACROS_H_
 
-#define MAX_TENANT 50
+#define MAX_TENANT 4
 
 extern int PNODE_NUM_;
 extern int GATE_NUM_;

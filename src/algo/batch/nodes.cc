@@ -17,13 +17,13 @@ void PNode::HandleMessage_Sync(std::shared_ptr<SyncMessage> msg) {
   memset(t.delta, -1, sizeof(t.delta));
   long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
   for (int i = 0; i < TENANT_NUM; ++i) {
-    if (s.num[i][0] >= 0) {
-      int n = record_r_[i].UpdateAndCount(s.gate, s.num[i][0], now-s.period, now);
-      t.rho[i] = ((double)n) / s.num[i][0];
+    if (s.rnum[i] >= 0) {
+      int n = record_r_[i].UpdateAndCount(s.gate, s.rnum[i], now-s.period, now);
+      t.rho[i] = ((double)n) / s.rnum[i];
     }
-    if (s.num[i][1] >= 0) {
-      int n = record_d_[i].UpdateAndCount(s.gate, s.num[i][1], now-s.period, now);
-      t.delta[i] = ((double)n) / s.num[i][1];
+    if (s.dnum[i] >= 0) {
+      int n = record_d_[i].UpdateAndCount(s.gate, s.dnum[i], now-s.period, now);
+      t.delta[i] = ((double)n) / s.dnum[i];
     }
   }
   std::shared_ptr<Message> new_msg = std::make_shared<TagsMessage>(port_, GET_PORT(GID2NID(s.gate)));
@@ -97,10 +97,10 @@ void Gate::Run() {
       s.gate = NID2GID(node_id_);
       s.period = period_;
       for (int i = 0; i < TENANT_NUM; ++i) {
-        for (int j = 0; j < 2; ++j) {
-          s.num[i][j] = scheduled_[i][j];
-          scheduled_[i][j] = 0;
-	}
+        s.rnum[i] = scheduled_[i][0];
+        s.dnum[i] = scheduled_[i][1];
+        scheduled_[i][0] = 0;
+        scheduled_[i][1] = 0;
       }
       new_msg->SetData(s);
       SendMessage(new_msg);

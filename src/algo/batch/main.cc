@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     thread_pool.push_back(std::make_shared<boost::thread>(boost::bind(&PNode::Run, pnode)));
   }
   for (int i = GATE_ID_START; i < GATE_ID_END; ++i) {
-    auto gate = std::make_shared<Gate>(i, GATE_PERIOD_, MSG_LATENCY_, io_service);
+    auto gate = std::make_shared<Gate>(i, MSG_LATENCY_, GATE_PERIOD_, io_service);
     thread_pool.push_back(std::make_shared<boost::thread>(boost::bind(&Gate::Run, gate)));
   }
   for (int i = USER_ID_START; i < USER_ID_END; ++i) {
