@@ -4,41 +4,31 @@
 #define CLOCK_REMAINDER 10000000
 
 BOOST_CLASS_EXPORT(RequestMessage)
-BOOST_CLASS_EXPORT(TagMessage)
-BOOST_CLASS_EXPORT(ScheduledMessage)
+BOOST_CLASS_EXPORT(TagsMessage)
+BOOST_CLASS_EXPORT(SyncMessage)
 BOOST_CLASS_EXPORT(CompleteMessage)
 
-void PNode::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
-  //std::cout << "PNode::HandleMessage_Request" << std::endl;
-  RequestData r;
-  msg->GetData(r);
-  std::shared_ptr<Message> new_msg = std::make_shared<TagMessage>(port_, GET_PORT(GID2NID(r.gate)));
-  TagData t = {
-    .rho = rho_[r.gate][r.tenant],
-    .delta = delta_[r.gate][r.tenant],
-    .request_gid = r.request_gid,
-  };
+void PNode::HandleMessage_Sync(std::shared_ptr<SyncMessage> msg) {
+  //std::cout << "PNode::HandleMessage_Sync" << std::endl;
+  SyncData s;
+  msg->GetData(s);
+  TagsData t;
+  memset(t.rho, -1, sizeof(t.rho));
+  memset(t.delta, -1, sizeof(t.delta));
+  long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
+  for (int i = 0; i < TENANT_NUM; ++i) {
+    if (s.num[i][0] >= 0) {
+      int n = record_r_[i].UpdateAndCount(s.gate, s.num[i][0], now-s.period, now);
+      t.rho[i] = ((double)n) / s.num[i][0];
+    }
+    if (s.num[i][1] >= 0) {
+      int n = record_d_[i].UpdateAndCount(s.gate, s.num[i][1], now-s.period, now);
+      t.delta[i] = ((double)n) / s.num[i][1];
+    }
+  }
+  std::shared_ptr<Message> new_msg = std::make_shared<TagsMessage>(port_, GET_PORT(GID2NID(s.gate)));
   new_msg->SetData(t);
   SendMessage(new_msg);
-}
-
-void PNode::HandleMessage_Scheduled(std::shared_ptr<ScheduledMessage> msg) {
-  //std::cout << "PNode::HandleMessage_Scheduled" << std::endl;
-  ScheduledData s;
-  msg->GetData(s);
-  // Update the rho records if the request was treated as a constraint-based one
-  if (s.method == 0) {
-    // Update the records of the other gates
-    for (int i = 0; i < GATE_NUM; ++i)
-      rho_[i][s.tenant] ++;
-
-    // Reset the record of the current gate
-    rho_[s.gate][s.tenant] = 1;
-  }
-  // Update the delta records
-  for (int i = 0; i < GATE_NUM; ++i)
-    delta_[i][s.tenant] ++;
-  delta_[s.gate][s.tenant] = 1;
 }
 
 void PNode::Run() {
@@ -47,33 +37,18 @@ void PNode::Run() {
 
 void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   //std::cout << "Gate::HandleMessage_Request" << std::endl;
-  // Push the new request from User(tenant t) to the requests_[t] queue
-  auto r = std::make_shared<RequestData>();
-  msg->GetData(*r);
-  r->request_gid = request_id_++;
-  requests_->push(r);
-  // Send a RequestMessage to PNode
-  std::shared_ptr<Message> new_msg = std::make_shared<RequestMessage>(port_, GET_PORT(PNODE_ID_START));
-  new_msg->SetData(*r);
-  SendMessage(new_msg);
-}
- 
-void Gate::HandleMessage_Tag(std::shared_ptr<TagMessage> msg) {
-  //std::cout << "Gate::HandleMessage_Tag" << std::endl;
-  std::unique_lock lock(tag_mutex_);
-  TagData t;
-  msg->GetData(t);
   RequestData r;
-  std::function<bool(RequestData)> lambda_match =
-    [t](RequestData rd)->bool {
-      return t.request_gid == rd.request_gid;
-    };
-  requests_->erase_match(r, lambda_match);
+  msg->GetData(r);
+  request_id_++;
   long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
   double dnow = now % CLOCK_REMAINDER;
-  rtag_[r.tenant] = std::max(rtag_[r.tenant] + (double) t.rho / TENANT_RESERVATION, dnow);
-  ltag_[r.tenant] = std::max(ltag_[r.tenant] + (double) t.delta / TENANT_LIMIT, dnow);
-  if (ptag_[r.tenant] < 0.01) {
+  // use parameters automatically
+  {
+    std::unique_lock lock(parameter_mutex_);
+    rtag_[r.tenant] = std::max(rtag_[r.tenant] + rho_[r.tenant] / TENANT_RESERVATION, dnow);
+    ltag_[r.tenant] = std::max(ltag_[r.tenant] + delta_[r.tenant] / TENANT_LIMIT, dnow);
+  }
+  if (ptag_[r.tenant] == 0) {
     long long mn = LLONG_MAX;
     for(auto p : ptag_) {
       if (p != 0 and mn > p) {
@@ -97,8 +72,40 @@ void Gate::HandleMessage_Tag(std::shared_ptr<TagMessage> msg) {
   );
   todo_list_->push(item);
 }
+ 
+void Gate::HandleMessage_Tags(std::shared_ptr<TagsMessage> msg) {
+  //std::cout << "Gate::HandleMessage_Tags" << std::endl;
+  TagsData t;
+  msg->GetData(t);
+  // update parameters
+  {
+    std::unique_lock lock(parameter_mutex_);
+    for (int i = 0; i < TENANT_NUM; ++i) {
+      rho_[i] = t.rho[i];
+      delta_[i] = t.delta[i];
+    }
+  }
+}
 
 void Gate::Run() {
+  thread_pool_.emplace_back( [=]{
+    // Send sync messages periodically to PNode
+    while (true) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(period_));
+      std::shared_ptr<Message> new_msg = std::make_shared<SyncMessage>(port_, GET_PORT(PNODE_ID_START));
+      SyncData s;
+      s.gate = NID2GID(node_id_);
+      s.period = period_;
+      for (int i = 0; i < TENANT_NUM; ++i) {
+        for (int j = 0; j < 2; ++j) {
+          s.num[i][j] = scheduled_[i][j];
+          scheduled_[i][j] = 0;
+	}
+      }
+      new_msg->SetData(s);
+      SendMessage(new_msg);
+    }
+  });
   thread_pool_.emplace_back( [=]{
     // Try to do the scheduling
     while (true) {
@@ -151,36 +158,29 @@ void Gate::Run() {
             }
             return false;
           };
-      todo_list_->erase_match(t, lambda_scan);
-      }
-
-      if (schedule_method < 0) {
-        idle_slots_->push(true);
-        continue;
+        todo_list_->erase_match(t, lambda_scan);
       }
 
       // Do the IO job
       auto self(shared_from_this());
       RequestData rd = t.data;
-      std::shared_ptr<Message> new_msg_u = std::make_shared<CompleteMessage>(port_, GET_PORT(rd.user));
-      std::shared_ptr<Message> new_msg_p = std::make_shared<ScheduledMessage>(port_, GET_PORT(PNODE_ID_START));
+      if (schedule_method < 0) {
+        idle_slots_->push(true);
+        continue;
+      }
+      scheduled_[rd.tenant][schedule_method]++;
+
+      std::shared_ptr<Message> new_msg = std::make_shared<CompleteMessage>(port_, GET_PORT(rd.user));
       CompleteData c = {
         .id = rd.id,
         .tenant = rd.tenant,
         .gate = NID2GID(node_id_),
         .status = 1,
       };
-      new_msg_u->SetData(c);
-      ScheduledData s = {
-        .tenant = rd.tenant,
-        .gate = NID2GID(node_id_),
-        .method = schedule_method,
-      };
-      new_msg_p->SetData(s);
-      SendMessage(new_msg_p);
-      auto handler = [&, new_msg_u, new_msg_p, self]() {
+      new_msg->SetData(c);
+      auto handler = [&, new_msg, self]() {
         // Respond to User with a CompleteMessage
-        SendMessage(new_msg_u);
+        SendMessage(new_msg);
         idle_slots_->push(true);
       };
       std::make_shared<DDLSession>(io_service_, handler, rd.hardness)->start();
