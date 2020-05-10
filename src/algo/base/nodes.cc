@@ -3,6 +3,10 @@
 
 #define CLOCK_REMAINDER 10000000
 
+long long total_latency = 0;
+int total_obey = 0;
+int total_count = 0;
+
 BOOST_CLASS_EXPORT(RequestMessage)
 BOOST_CLASS_EXPORT(TagMessage)
 BOOST_CLASS_EXPORT(ScheduledMessage)
@@ -201,11 +205,15 @@ void User::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
   counter_ ++;
   if (maximum_latency_ < latency)
     maximum_latency_ = latency;
-  std::cout << node_id_ << "\t"
-            << c.id << "\t"
-            << latency << "\t"
-            << latency_summary_ / counter_ << "\t"
-            << maximum_latency_ << "\t"
+  //std::cout << node_id_ << "\t"
+  //          << c.id << "\t"
+  //          << latency << "\t"
+  //          << latency_summary_ / counter_ << "\t"
+  //          << maximum_latency_ << "\t"
+  //          << std::endl;
+  total_latency += latency;
+  total_count ++;
+  std::cout << total_latency / total_count << "\t"
             << std::endl;
 }
 
