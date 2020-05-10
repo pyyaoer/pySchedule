@@ -15,6 +15,9 @@ int TENANT_RESERVATION_ = 50;
 int BENCHMARK_SHAPE_ = 0;
 int MSG_LATENCY_ = 10;
 int GATE_PERIOD_ = 1000;
+int WINDOW_SIZE_ = 10;
+
+std::vector<std::queue<HistoryItem>> history;
 
 int main(int argc, char **argv) {
 
@@ -33,11 +36,21 @@ int main(int argc, char **argv) {
     BENCHMARK_SHAPE_ = ptree.get<int>("BENCHMARK_SHAPE");
     MSG_LATENCY_ = ptree.get<int>("MSG_LATENCY");
     GATE_PERIOD_ = ptree.get<int>("GATE_PERIOD");
+    WINDOW_SIZE_ = ptree.get<int>("WINDOW_SIZE");
   }
   else if (argc != 1)
   {
     std::cerr << "Bad argument!" << std::endl;
     return -1;
+  }
+
+  for (int i = 0; i < TENANT_NUM; ++i) {
+    std::queue<HistoryItem> his;
+    for (int j = 0; j < WINDOW_SIZE_; ++j) {
+      HistoryItem hi;
+      his.push(hi);
+    }
+    history.push_back(his);
   }
 
   boost::asio::io_service io_service;

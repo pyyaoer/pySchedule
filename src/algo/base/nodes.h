@@ -113,5 +113,10 @@ class User : public Node {
   DISALLOW_COPY_AND_ASSIGN(User);
 };
 
+typedef struct {
+  long long create_time;
+  long long finish_time;
+} HistoryItem;
+
 #endif // PYSCHEDULE_ALGO_BASE_NODES_H_
 

@@ -7,6 +7,9 @@ long long total_latency = 0;
 int total_obey = 0;
 int total_count = 0;
 
+extern std::vector<std::queue<HistoryItem>> history;
+std::mutex history_mutex;
+
 BOOST_CLASS_EXPORT(RequestMessage)
 BOOST_CLASS_EXPORT(TagsMessage)
 BOOST_CLASS_EXPORT(SyncMessage)
@@ -213,7 +216,23 @@ void User::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
   //          << std::endl;
   total_latency += latency;
   total_count ++;
+  HistoryItem cur = {
+    .create_time = create_time,
+    .finish_time = complete_time,
+  };
+  {
+    std::unique_lock lock(history_mutex);
+    history[tenant_id_].push(cur);
+    auto his = history[tenant_id_].front();
+    history[tenant_id_].pop();
+    if (cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION
+	or cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION
+	and cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) {
+      total_obey ++;
+    }
+  }
   std::cout << total_latency / total_count << "\t"
+            << total_obey * 100.0 / total_count << "%\t"
             << std::endl;
 }
 
