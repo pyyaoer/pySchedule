@@ -50,8 +50,22 @@ int Benchmark::SineNext() {
   return ret;
 }
 
+// arg1: N per second
+// arg2: small ratio
+// period: 20s
+// 19s*small ipos + 1s*large iops
+// e.g. N=10, small=5, large=(20N-19*small)/1=105
+// status: 0 for large and 1 for small
 int Benchmark::BurstyNext() {
-  return 0;
+  if (quota < 0) {
+    status = -status;
+    quota += 10000;
+  }
+  double ratio = (status > 0) ? arg1*20-arg2*19 : arg2;
+  std::normal_distribution<> rand_interval{1000/ratio, var};
+  int ret = rand_interval(gen);
+  quota -= ret;
+  return ret;
 }
 
 int Benchmark::next() {

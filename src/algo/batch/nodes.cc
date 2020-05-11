@@ -241,7 +241,7 @@ void User::Run() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> rand_gate(GATE_ID_START, GATE_ID_END - 1);
-    std::normal_distribution<> rand_hardness{100, 10};
+    std::normal_distribution<> rand_hardness{(double)REQUEST_HARDNESS, (double)REQUEST_HARDNESS/10};
 
     while(true) {
       int gate_node_id = rand_gate(gen);

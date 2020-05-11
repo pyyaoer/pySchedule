@@ -16,6 +16,7 @@ int BENCHMARK_SHAPE_ = 0;
 int MSG_LATENCY_ = 10;
 int GATE_PERIOD_ = 1000;
 int WINDOW_SIZE_ = 10;
+int REQUEST_HARDNESS_ = 100;
 
 std::vector<std::queue<HistoryItem>> history;
 
@@ -37,6 +38,7 @@ int main(int argc, char **argv) {
     MSG_LATENCY_ = ptree.get<int>("MSG_LATENCY");
     GATE_PERIOD_ = ptree.get<int>("GATE_PERIOD");
     WINDOW_SIZE_ = ptree.get<int>("WINDOW_SIZE");
+    REQUEST_HARDNESS_ = ptree.get<int>("REQUEST_HARDNESS");
   }
   else if (argc != 1)
   {
@@ -75,6 +77,9 @@ int main(int argc, char **argv) {
 	break;
       case 2:
 	user = std::make_shared<User>(i % TENANT_NUM, i, MSG_LATENCY_, io_service, 2, 10, 20000);
+	break;
+      case 3:
+        user = std::make_shared<User>(i % TENANT_NUM, i, MSG_LATENCY_, io_service, 3, 10, 5);
 	break;
     }
     thread_pool.push_back(std::make_shared<boost::thread>(boost::bind(&User::Run, user)));

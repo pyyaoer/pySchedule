@@ -22,6 +22,8 @@ class Benchmark {
 	       status=-1000;
 	       break;
 	case 3:
+	       quota=1000;
+	       status=1;
 	       break;
       }
     }
