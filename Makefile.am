@@ -23,7 +23,8 @@ include_HEADERS = include/lib_include.h \
 
 
 bin_PROGRAMS = bin/base \
-                bin/batch
+                bin/batch \
+		bin/autoadjust
 
 #bin_PROGRAMS = bin/test_1to1 \
 #                bin/test_nto1 \
@@ -55,3 +56,8 @@ bin_batch_SOURCES = src/node.cc \
                      src/benchmark.cc \
                      src/algo/batch/nodes.cc \
                      src/algo/batch/main.cc
+
+bin_autoadjust_SOURCES = src/node.cc \
+                          src/benchmark.cc \
+                          src/algo/autoadjust/nodes.cc \
+                          src/algo/autoadjust/main.cc
