@@ -26,11 +26,11 @@ void PNode::HandleMessage_Sync(std::shared_ptr<SyncMessage> msg) {
   for (int i = 0; i < TENANT_NUM; ++i) {
     if (s.rnum[i] >= 0) {
       int n = record_r_[i].UpdateAndCount(s.gate, s.rnum[i], now-s.period, now);
-      t.rho[i] = ((double)n) / s.rnum[i];
+      t.rho[i] = (s.rnum[i] == 0) ? 0 : ((double)n) / s.rnum[i];
     }
     if (s.dnum[i] >= 0) {
       int n = record_d_[i].UpdateAndCount(s.gate, s.dnum[i], now-s.period, now);
-      t.delta[i] = ((double)n) / s.dnum[i];
+      t.delta[i] = (s.dnum[i] == 0) ? 0 : ((double)n) / s.dnum[i];
     }
   }
   std::shared_ptr<Message> new_msg = std::make_shared<TagsMessage>(port_, GET_PORT(GID2NID(s.gate)));
@@ -52,10 +52,11 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   // use parameters automatically
   {
     std::unique_lock lock(parameter_mutex_);
+    //std::cout << "\t" << rho_[r.tenant] << " " << delta_[r.tenant] << std::endl;
     rtag_[r.tenant] = std::max(rtag_[r.tenant] + rho_[r.tenant] / TENANT_RESERVATION, dnow);
     ltag_[r.tenant] = std::max(ltag_[r.tenant] + delta_[r.tenant] / TENANT_LIMIT, dnow);
   }
-  if (ptag_[r.tenant] == 0) {
+  if (ptag_[r.tenant] < 0.01) {
     long long mn = LLONG_MAX;
     for(auto p : ptag_) {
       if (p != 0 and mn > p) {
@@ -226,14 +227,17 @@ void User::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
     auto his = history[tenant_id_].front();
     history[tenant_id_].pop();
     if (cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION
-	or cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION
-	and cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) {
+      or cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION
+      and cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) {
       total_obey ++;
     }
-  }
-  std::cout << total_latency / total_count << "\t"
+    std::cout << total_latency / total_count << "\t"
             << total_obey * 100.0 / total_count << "%\t"
+            << ((cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION) ? 1 : 0) << "\t"
+            << ((cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION) or (cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION) ? 1 : 0) << "\t"
+            << ((cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION) or (cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) ? 1 : 0) << "\t"
             << std::endl;
+  }
 }
 
 void User::Run() {
