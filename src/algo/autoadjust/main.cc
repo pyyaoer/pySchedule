@@ -17,6 +17,8 @@ int MSG_LATENCY_ = 10;
 int GATE_PERIOD_ = 1000;
 int WINDOW_SIZE_ = 10;
 int REQUEST_HARDNESS_ = 100;
+int DBG_ = 0;
+long long TIME_START = 0;
 
 std::vector<std::queue<HistoryItem>> history;
 
@@ -39,12 +41,14 @@ int main(int argc, char **argv) {
     GATE_PERIOD_ = ptree.get<int>("GATE_PERIOD");
     WINDOW_SIZE_ = ptree.get<int>("WINDOW_SIZE");
     REQUEST_HARDNESS_ = ptree.get<int>("REQUEST_HARDNESS");
+    DBG_ = ptree.get<int>("DBG");
   }
   else if (argc != 1)
   {
     std::cerr << "Bad argument!" << std::endl;
     return -1;
   }
+  TIME_START = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
 
   for (int i = 0; i < TENANT_NUM; ++i) {
     std::queue<HistoryItem> his;

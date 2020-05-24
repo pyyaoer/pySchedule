@@ -1,8 +1,6 @@
 #include "nodes.h"
 #include "include/ddlsession.h"
 
-#define CLOCK_REMAINDER 10000000
-
 long long total_latency = 0;
 int total_obey = 0;
 int total_count = 0;
@@ -15,6 +13,10 @@ BOOST_CLASS_EXPORT(TagsMessage)
 BOOST_CLASS_EXPORT(SyncMessage)
 BOOST_CLASS_EXPORT(CompleteMessage)
 
+long long get_now() {
+  return (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count() - TIME_START;
+}
+
 void PNode::HandleMessage_Sync(std::shared_ptr<SyncMessage> msg) {
   //std::cout << "PNode::HandleMessage_Sync" << std::endl;
   SyncData s;
@@ -22,7 +24,7 @@ void PNode::HandleMessage_Sync(std::shared_ptr<SyncMessage> msg) {
   TagsData t;
   memset(t.rho, -1, sizeof(t.rho));
   memset(t.delta, -1, sizeof(t.delta));
-  long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
+  long long now = get_now();
   for (int i = 0; i < TENANT_NUM; ++i) {
     if (s.rnum[i] >= 0) {
       int n = record_r_[i].UpdateAndCount(s.gate, s.rnum[i], now-s.period, now);
@@ -47,8 +49,8 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   RequestData r;
   msg->GetData(r);
   request_id_++;
-  long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
-  double dnow = now % CLOCK_REMAINDER;
+  long long now = get_now();
+  double dnow = now;
   // use parameters automatically
   {
     std::unique_lock lock(parameter_mutex_);
@@ -79,6 +81,15 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
       .data = r,
     }
   );
+  if (DBG >= 1) {
+    std::cout << "\tGate:" << r.gate
+              << "\tTenant:" << r.tenant
+              << "\tID:" <<  r.id
+	      << "\tRTag:" << rtag_[r.tenant]
+	      << "\tLTag:" << ltag_[r.tenant]
+	      << "\tPTag:" << ptag_[r.tenant]
+	      << std::endl;
+  }
   todo_list_->push(item);
 }
  
@@ -126,7 +137,7 @@ void Gate::Run() {
       long long min_rtag = LLONG_MAX;
       int min_pid = -1;
       long long min_ptag = LLONG_MAX;
-      long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
+      long long now = get_now();
       std::function<bool(TodoItem)> lambda_scan =
         [&, now](TodoItem ti)->bool {
           if (min_rtag > ti.r_tag) {

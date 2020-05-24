@@ -1,8 +1,6 @@
 #include "nodes.h"
 #include "include/ddlsession.h"
 
-#define CLOCK_REMAINDER 10000000
-
 long long total_latency = 0;
 int total_obey = 0;
 int total_count = 0;
@@ -14,6 +12,10 @@ BOOST_CLASS_EXPORT(RequestMessage)
 BOOST_CLASS_EXPORT(TagMessage)
 BOOST_CLASS_EXPORT(ScheduledMessage)
 BOOST_CLASS_EXPORT(CompleteMessage)
+
+long long get_now() {
+  return (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count() - TIME_START;
+}
 
 void PNode::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   //std::cout << "PNode::HandleMessage_Request" << std::endl;
@@ -76,10 +78,9 @@ void Gate::HandleMessage_Tag(std::shared_ptr<TagMessage> msg) {
       return t.request_gid == rd.request_gid;
     };
   requests_->erase_match(r, lambda_match);
-  long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
-  double dnow = now % CLOCK_REMAINDER;
-  rtag_[r.tenant] = std::max(rtag_[r.tenant] + (double) t.rho / TENANT_RESERVATION, dnow);
-  ltag_[r.tenant] = std::max(ltag_[r.tenant] + (double) t.delta / TENANT_LIMIT, dnow);
+  double dnow = get_now();
+  rtag_[r.tenant] = std::max(rtag_[r.tenant] + 1000.0 * t.rho / TENANT_RESERVATION, dnow);
+  ltag_[r.tenant] = std::max(ltag_[r.tenant] + 1000.0 * t.delta / TENANT_LIMIT, dnow);
   if (ptag_[r.tenant] < 0.01) {
     long long mn = LLONG_MAX;
     for(auto p : ptag_) {
@@ -102,6 +103,15 @@ void Gate::HandleMessage_Tag(std::shared_ptr<TagMessage> msg) {
       .data = r,
     }
   );
+  if (DBG >= 1) {
+    std::cout << "\tGate:" << r.gate
+              << "\tTenant:" << r.tenant
+              << "\tID:" <<  r.id
+	      << "\tRTag:" << rtag_[r.tenant]
+	      << "\tLTag:" << ltag_[r.tenant]
+	      << "\tPTag:" << ptag_[r.tenant]
+	      << std::endl;
+  }
   todo_list_->push(item);
 }
 
@@ -117,7 +127,7 @@ void Gate::Run() {
       long long min_rtag = LLONG_MAX;
       int min_pid = -1;
       long long min_ptag = LLONG_MAX;
-      long long now = (duration_cast< milliseconds >(system_clock::now().time_since_epoch())).count();
+      long long now = get_now();
       std::function<bool(TodoItem)> lambda_scan =
         [&, now](TodoItem ti)->bool {
           if (min_rtag > ti.r_tag) {
@@ -226,8 +236,8 @@ void User::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
     auto his = history[tenant_id_].front();
     history[tenant_id_].pop();
     if (cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION
-	or cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION
-	and cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) {
+	or cur.finish_time - his.finish_time <= 1010 * WINDOW_SIZE / TENANT_RESERVATION
+	and cur.finish_time - his.finish_time >= 990 * WINDOW_SIZE / TENANT_LIMIT) {
       total_obey ++;
     }
   }

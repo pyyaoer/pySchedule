@@ -12,6 +12,8 @@ extern int BENCHMARK_SHAPE_;
 extern int MSG_LATENCY_;
 extern int WINDOW_SIZE_;
 extern int REQUEST_HARDNESS_;
+extern int DBG_;
+extern long long TIME_START;
 
 #define PNODE_NUM PNODE_NUM_
 #define GATE_NUM GATE_NUM_
@@ -19,6 +21,7 @@ extern int REQUEST_HARDNESS_;
 #define TENANT_NUM TENANT_NUM_
 #define WINDOW_SIZE WINDOW_SIZE_
 #define REQUEST_HARDNESS REQUEST_HARDNESS_
+#define DBG DBG_
 
 #define PNODE_ID_START ID_BASE
 #define PNODE_ID_END (PNODE_ID_START + PNODE_NUM)

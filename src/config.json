@@ -1,14 +1,15 @@
 {
     "PNODE_NUM" : 1,
-    "GATE_NUM" : 8,
-    "USER_NUM" : 12,
-    "TENANT_NUM" : 4,
-    "THREADS_PER_GATE" : 2,
-    "TENANT_LIMIT" : 150,
-    "TENANT_RESERVATION" : 90,
-    "BENCHMARK_SHAPE": 3,
-    "MSG_LATENCY": 10,
-    "GATE_PERIOD": 10000,
+    "GATE_NUM" : 1,
+    "USER_NUM" : 2,
+    "TENANT_NUM" : 1,
+    "THREADS_PER_GATE" : 1,
+    "TENANT_LIMIT" : 10,
+    "TENANT_RESERVATION" : 5,
+    "BENCHMARK_SHAPE": 1,
+    "MSG_LATENCY": 100,
+    "GATE_PERIOD": 3000,
     "WINDOW_SIZE": 10,
-    "REQUEST_HARDNESS": 50 
+    "REQUEST_HARDNESS": 50,
+    "DBG": 1
 }
