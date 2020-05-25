@@ -1,14 +1,14 @@
 {
     "PNODE_NUM" : 1,
     "GATE_NUM" : 1,
-    "USER_NUM" : 2,
+    "USER_NUM" : 1,
     "TENANT_NUM" : 1,
     "THREADS_PER_GATE" : 1,
     "TENANT_LIMIT" : 10,
     "TENANT_RESERVATION" : 5,
     "BENCHMARK_SHAPE": 1,
     "MSG_LATENCY": 100,
-    "GATE_PERIOD": 3000,
+    "GATE_PERIOD": 100,
     "WINDOW_SIZE": 10,
     "REQUEST_HARDNESS": 50,
     "DBG": 1

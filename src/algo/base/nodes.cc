@@ -240,10 +240,13 @@ void User::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
 	and cur.finish_time - his.finish_time >= 990 * WINDOW_SIZE / TENANT_LIMIT) {
       total_obey ++;
     }
-  }
-  std::cout << total_latency / total_count << "\t"
+    std::cout << total_latency / total_count << "\t"
             << total_obey * 100.0 / total_count << "%\t"
+            << ((cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION) ? 1 : 0) << "\t"
+            << ((cur.create_time - his.create_time <= 1010 * WINDOW_SIZE / TENANT_RESERVATION) or (cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION) ? 1 : 0) << "\t"
+            << ((cur.create_time - his.create_time >= 990 * WINDOW_SIZE / TENANT_RESERVATION) or (cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) ? 1 : 0) << "\t"
             << std::endl;
+  }
 }
 
 void User::Run() {

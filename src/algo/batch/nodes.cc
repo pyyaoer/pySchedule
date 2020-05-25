@@ -53,7 +53,6 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   // use parameters automatically
   {
     std::unique_lock lock(parameter_mutex_);
-    //std::cout << "\t" << rho_[r.tenant] << " " << delta_[r.tenant] << std::endl;
     rtag_[r.tenant] = std::max(rtag_[r.tenant] + 1000.0 * rho_[r.tenant] / TENANT_RESERVATION, dnow);
     ltag_[r.tenant] = std::max(ltag_[r.tenant] + 1000.0 * delta_[r.tenant] / TENANT_LIMIT, dnow);
   }
@@ -237,15 +236,15 @@ void User::HandleMessage_Complete(std::shared_ptr<CompleteMessage> msg) {
     auto his = history[tenant_id_].front();
     history[tenant_id_].pop();
     if (cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION
-      or cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION
-      and cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) {
+      or cur.finish_time - his.finish_time <= 1010 * WINDOW_SIZE / TENANT_RESERVATION
+      and cur.finish_time - his.finish_time >= 990 * WINDOW_SIZE / TENANT_LIMIT) {
       total_obey ++;
     }
     std::cout << total_latency / total_count << "\t"
             << total_obey * 100.0 / total_count << "%\t"
             << ((cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION) ? 1 : 0) << "\t"
-            << ((cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION) or (cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION) ? 1 : 0) << "\t"
-            << ((cur.create_time - his.create_time >= 1000 * WINDOW_SIZE / TENANT_RESERVATION) or (cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) ? 1 : 0) << "\t"
+            << ((cur.create_time - his.create_time <= 1010 * WINDOW_SIZE / TENANT_RESERVATION) or (cur.finish_time - his.finish_time <= 1000 * WINDOW_SIZE / TENANT_RESERVATION) ? 1 : 0) << "\t"
+            << ((cur.create_time - his.create_time >= 990 * WINDOW_SIZE / TENANT_RESERVATION) or (cur.finish_time - his.finish_time >= 1000 * WINDOW_SIZE / TENANT_LIMIT) ? 1 : 0) << "\t"
             << std::endl;
   }
 }
