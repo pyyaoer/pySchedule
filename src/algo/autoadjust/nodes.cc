@@ -28,11 +28,11 @@ void PNode::HandleMessage_Sync(std::shared_ptr<SyncMessage> msg) {
   for (int i = 0; i < TENANT_NUM; ++i) {
     if (s.rnum[i] >= 0) {
       int n = record_r_[i].UpdateAndCount(s.gate, s.rnum[i], now-s.period, now);
-      t.rho[i] = (s.rnum[i] == 0) ? 0 : ((double)n) / s.rnum[i];
+      t.rho[i] = n - s.rnum[i];
     }
     if (s.dnum[i] >= 0) {
       int n = record_d_[i].UpdateAndCount(s.gate, s.dnum[i], now-s.period, now);
-      t.delta[i] = (s.dnum[i] == 0) ? 0 : ((double)n) / s.dnum[i];
+      t.delta[i] = n - s.dnum[i];
     }
   }
   std::shared_ptr<Message> new_msg = std::make_shared<TagsMessage>(port_, GET_PORT(GID2NID(s.gate)));
@@ -56,8 +56,10 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
     std::unique_lock lock(parameter_mutex_);
     double dt = (last_request_time_[r.tenant] == 0) ? 0 : (now - last_request_time_[r.tenant]);
     std::cout << dt << std::endl;
-    rtag_[r.tenant] = std::max(rtag_[r.tenant] + 1000*rho_[r.tenant]*dt / TENANT_RESERVATION, dnow);
-    ltag_[r.tenant] = std::max(ltag_[r.tenant] + 1000*delta_[r.tenant]*dt / TENANT_LIMIT, dnow);
+    auto rho = rho_[r.tenant] / period_ + 1;
+    auto delta = delta_[r.tenant] / period_ + 1;
+    rtag_[r.tenant] = std::max(rtag_[r.tenant] + 1000 * rho / TENANT_RESERVATION, dnow);
+    ltag_[r.tenant] = std::max(ltag_[r.tenant] + 1000 * delta / TENANT_LIMIT, dnow);
     last_request_time_[r.tenant] = now;
   }
   if (ptag_[r.tenant] < 0.01) {
