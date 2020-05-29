@@ -55,11 +55,12 @@ bin_base_SOURCES = src/node.cc \
 
 bin_batch_SOURCES = src/node.cc \
                      src/benchmark.cc \
-                    src/algo/unodes.cc \
+                     src/algo/unodes.cc \
                      src/algo/batch/nodes.cc \
                      src/algo/batch/main.cc
 
 bin_autoadjust_SOURCES = src/node.cc \
                           src/benchmark.cc \
+                          src/algo/unodes.cc \
                           src/algo/autoadjust/nodes.cc \
                           src/algo/autoadjust/main.cc
