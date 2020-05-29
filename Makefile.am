@@ -49,6 +49,7 @@ bin_PROGRAMS = bin/base \
 
 bin_base_SOURCES = src/node.cc \
                     src/benchmark.cc \
+		    src/algo/unodes.cc \
                     src/algo/base/nodes.cc \
                     src/algo/base/main.cc
 
