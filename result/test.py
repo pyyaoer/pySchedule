@@ -93,12 +93,12 @@ print "+++++++++ period ++++++++++++"
 for i in range(0, 4):
     print "shape = " + str(i)
     print "\t********period_100********"
-    fun(i, 2, 3, 11, period_change_100)
+    fun(i, 1, 3, 11, period_change_100)
     print "\t********period_1000********"
-    fun(i, 2, 3, 11, period_change)
+    fun(i, 1, 3, 11, period_change)
 
-#print "+++++++++ latency ++++++++++++"
-#for i in range(0, 4):
-#    print "shape = " + str(i)
-#    fun(i, 0, 2, 11, latency_change)
+print "+++++++++ latency ++++++++++++"
+for i in range(0, 3):
+    print "shape = " + str(i)
+    fun(i, 0, 3, 11, latency_change)
 

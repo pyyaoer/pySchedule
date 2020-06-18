@@ -55,8 +55,8 @@ void Gate::HandleMessage_Request(std::shared_ptr<RequestMessage> msg) {
   {
     std::unique_lock lock(parameter_mutex_);
     double dt = (last_request_time_[r.tenant] == 0) ? 0 : (now - last_request_time_[r.tenant]);
-    auto rho = rho_[r.tenant] / period_ + 1;
-    auto delta = delta_[r.tenant] / period_ + 1;
+    auto rho = rho_[r.tenant] / period_ * dt + 1;
+    auto delta = delta_[r.tenant] / period_ * dt + 1;
     rtag_[r.tenant] = std::max(rtag_[r.tenant] + 1000 * rho / TENANT_RESERVATION, dnow);
     ltag_[r.tenant] = std::max(ltag_[r.tenant] + 1000 * delta / TENANT_LIMIT, dnow);
     last_request_time_[r.tenant] = now;
